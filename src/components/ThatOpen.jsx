@@ -7,34 +7,25 @@ import { useEffect, useState } from "react";
 export default function ThatOpen({}) {
   const [isRender, setIsRender] = useState(false);
 
-  function disposeFragments() {
-    fragments.dispose();
-  }
+  const components = new OBC.Components();
+  const fragments = components.get(OBC.FragmentsManager);
+  const worlds = components.get(OBC.Worlds);
+  const fragmentIfcLoader = components.get(OBC.IfcLoader);
+
+  const grids = components.get(OBC.Grids);
+  const world = worlds.create();
+  components.init();
 
   async function loadIfc(e) {
     const container = document.getElementById("canvas-container");
-
-    const components = new OBC.Components();
-
-    const worlds = components.get(OBC.Worlds);
-
-    const fragments = components.get(OBC.FragmentsManager);
-    const fragmentIfcLoader = components.get(OBC.IfcLoader);
-
-    const grids = components.get(OBC.Grids);
-    const world = worlds.create();
-
-    console.log(e.target.files[0]);
-    components.init();
-
     world.scene = new OBC.SimpleScene(components);
     world.renderer = new OBC.SimpleRenderer(components, container);
     world.camera = new OBC.SimpleCamera(components);
     world.camera.controls.setLookAt(12, 6, 8, 0, 0, -10);
-
     world.scene.setup();
-    grids.create(world);
+
     world.scene.three.background = null;
+    grids.create(world);
 
     await fragmentIfcLoader.setup();
     const excludedCats = [
@@ -56,6 +47,10 @@ export default function ThatOpen({}) {
     world.scene.three.add(model);
   }
 
+  function disposeFragments() {
+    fragments.dispose();
+  }
+
   // useEffect(() => {
   //   console.log(isRender);
   //   if (!isRender) fragmentBbox.reset();
@@ -64,17 +59,16 @@ export default function ThatOpen({}) {
 
   return (
     <>
-      <input type="file" onChange={loadIfc} />
-      <button
-        className="btn"
-        onClick={(e) => {
-          e.preventDefault();
-          if (isRender == false) setIsRender(true);
-          else setIsRender(false);
-        }}
-      >
-        Render Now
-      </button>
+      <div className="flex flex-col items-center gap-2">
+        <input
+          type="file"
+          className="file-input file-input-bordered w-full max-w-xs mt-2"
+          onChange={loadIfc}
+        />
+        <button className="btn w-fit" onClick={disposeFragments}>
+          Dispose
+        </button>
+      </div>
       <div id="canvas-container"></div>
     </>
   );
