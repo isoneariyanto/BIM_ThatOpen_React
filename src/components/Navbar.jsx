@@ -1,10 +1,14 @@
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom'
+import { HomeIcon } from '@heroicons/react/24/outline'
 
 export default function Navbar() {
   return (
-    <div className="navbar bg-base-100" id="navbar">
+    <div
+      className="navbar bg-base-100 px-6 shadow sticky top-0 z-10"
+      id="navbar"
+    >
       <div className="navbar-start">
-        <div className="dropdown">
+        <div className="dropdown dropdown-bottom">
           <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -29,31 +33,40 @@ export default function Navbar() {
               <Link to={`/`}>Homepage</Link>
             </li>
             <li>
-              <Link to={`/project`}>Project</Link>
+              <Link to={`/project`}>Projects</Link>
+            </li>
+            <li>
+              <a>Workspaces</a>
+              <ul>
+                <li>
+                  <a>Introduction Workspaces</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a>Resources</a>
+              <ul>
+                <li>
+                  <a>Connectors</a>
+                </li>
+                <li>
+                  <a>Community Forum</a>
+                </li>
+                <li>
+                  <a>Give us feedback</a>
+                </li>
+                <li>
+                  <a>Changelog</a>
+                </li>
+              </ul>
             </li>
           </ul>
         </div>
       </div>
       <div className="navbar-center">
-        <a className="btn btn-ghost text-xl">LazzyNet Open BIM</a>
+        <a className="btn btn-ghost text-xl">LazzyBim</a>
       </div>
       <div className="navbar-end">
-        <button className="btn btn-ghost btn-circle">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-        </button>
         <button className="btn btn-ghost btn-circle">
           <div className="indicator">
             <svg
@@ -73,7 +86,38 @@ export default function Navbar() {
             <span className="badge badge-xs badge-primary indicator-item"></span>
           </div>
         </button>
+        <div className="dropdown dropdown-end">
+          <div
+            tabIndex={0}
+            role="button"
+            className="btn btn-ghost btn-circle avatar"
+          >
+            <div className="mask mask-hexagon w-10">
+              <img
+                alt="Tailwind CSS Navbar component"
+                src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+              />
+            </div>
+          </div>
+          <ul
+            tabIndex={0}
+            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+          >
+            <li>
+              <a className="justify-between">
+                Profile
+                <span className="badge">New</span>
+              </a>
+            </li>
+            <li>
+              <a>Settings</a>
+            </li>
+            <li>
+              <a>Logout</a>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
-  );
+  )
 }
