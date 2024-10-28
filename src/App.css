@@ -1,6 +1,6 @@
 #root {
   width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
   margin: 0 auto;
   text-align: center;
 }

@@ -210,7 +210,6 @@ export default function DetailProject() {
       </div>
 
       {/* Tabs Content */}
-
       <h1 className="col-span-4 text-start text-xl font-medium">
         {tabActive == 'models'
           ? 'Models'
@@ -303,6 +302,7 @@ export default function DetailProject() {
               </div>
             </dialog>
           </div>
+          {/* Models Content */}
           <div className="col-span-12 flex gap-4 mt-4">
             {bimData.map((i) =>
               i.child.map((d) => (
@@ -310,7 +310,7 @@ export default function DetailProject() {
                   <div className="card bg-base-100 w-full p-0 text-start border">
                     <div className="card-body p-6">
                       <h1 className="card-title w-full justify-between">
-                        <Link to={`${i.link}/models/${d.id}`}>{d.title}</Link>
+                        <Link to={`models/${d.id}`}>{d.title}</Link>
                         <div className="dropdown dropdown-end">
                           <button
                             tabIndex={0}
@@ -384,7 +384,8 @@ export default function DetailProject() {
         ''
       ) : (
         <div className="flex w-full gap-4 justify-end col-span-12 mt-4">
-          <ul className="menu bg-base-200 rounded-box w-2/12 bg-transparent">
+          {/* Setting Tabs */}
+          <ul className="menu bg-base-200 rounded-box w-2/12 bg-transparent gap-2">
             <li>
               <a
                 className={`text-start ${
@@ -419,175 +420,189 @@ export default function DetailProject() {
               </a>
             </li>
           </ul>
+          {/* Setting Tab Contents */}
           <div className="w-10/12 flex flex-col gap-4">
-            <div className="card bg-base-100 w-full border shadow-md p-0">
-              <div className="card-body">
-                <h2 className="card-title">Project info</h2>
-                <label className="form-control w-full max-w-xs">
-                  <div className="label">
-                    <span className="label-text font-medium">Project name</span>
+            {settingTabActive == 'general' ? (
+              <>
+                <div className="card bg-base-100 w-full border p-0">
+                  <div className="card-body">
+                    <h2 className="card-title">Project info</h2>
+                    <label className="form-control w-full max-w-xs">
+                      <div className="label">
+                        <span className="label-text font-medium">
+                          Project name
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Type here"
+                        className="input input-bordered w-full max-w-xs"
+                      />
+                    </label>
+                    <label className="form-control">
+                      <div className="label">
+                        <span className="label-text font-medium">
+                          Project description (optional)
+                        </span>
+                      </div>
+                      <textarea
+                        className="textarea textarea-bordered h-24"
+                        placeholder="Bio"
+                      ></textarea>
+                    </label>
+                    <div className="card-actions justify-end mt-4">
+                      <button className="btn btn-base-300">Cancel</button>
+                      <button className="btn btn-secondary">Update</button>
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Type here"
-                    className="input input-bordered w-full max-w-xs"
-                  />
-                </label>
-                <label className="form-control">
-                  <div className="label">
-                    <span className="label-text font-medium">
-                      Project description (optional)
-                    </span>
-                  </div>
-                  <textarea
-                    className="textarea textarea-bordered h-24"
-                    placeholder="Bio"
-                  ></textarea>
-                </label>
-                <div className="card-actions justify-end mt-4">
-                  <button className="btn btn-base-300">Cancel</button>
-                  <button className="btn btn-secondary">Update</button>
                 </div>
-              </div>
-            </div>
 
-            <div className="card bg-base-100 w-full border shadow-md p-0">
-              <div className="card-body">
-                <h2 className="card-title">Access</h2>
-                <p className="text-base text-start">
-                  Choose how you want to share this project with others.
-                </p>
-                <div className="flex gap-2">
-                  <div className="card border w-1/3 p-0 relative">
-                    <div className="card-body p-4">
-                      <GlobeAsiaAustraliaIcon className="size-8" />
-                      <h2 className="card-title mt-2">Discoverable</h2>
-                      <p className="text-base text-start">
-                        Project is visible to everyone
-                      </p>
-                      <div className="form-control absolute top-4 right-4">
-                        <label className="cursor-pointer label">
-                          <input
-                            type="checkbox"
-                            defaultChecked
-                            className="checkbox checkbox-secondary"
-                          />
-                        </label>
+                <div className="card bg-base-100 w-full border p-0">
+                  <div className="card-body">
+                    <h2 className="card-title">Access</h2>
+                    <p className="text-base text-start">
+                      Choose how you want to share this project with others.
+                    </p>
+                    <div className="flex gap-2">
+                      <div className="card border w-1/3 p-0 relative">
+                        <div className="card-body p-4">
+                          <GlobeAsiaAustraliaIcon className="size-8" />
+                          <h2 className="card-title mt-2">Discoverable</h2>
+                          <p className="text-base text-start">
+                            Project is visible to everyone
+                          </p>
+                          <div className="form-control absolute top-4 right-4">
+                            <label className="cursor-pointer label">
+                              <input
+                                type="checkbox"
+                                defaultChecked
+                                className="checkbox checkbox-secondary"
+                              />
+                            </label>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <div className="card border w-1/3 p-0 relative">
-                    <div className="card-body p-4">
-                      <LinkIcon className="size-8" />
-                      <h2 className="card-title mt-2">Link shareable</h2>
-                      <p className="text-base text-start">
-                        Anyone with the link can view
-                      </p>
-                      <div className="form-control absolute top-4 right-4">
-                        <label className="cursor-pointer label">
-                          <input
-                            type="checkbox"
-                            className="checkbox checkbox-secondary"
-                          />
-                        </label>
+                      <div className="card border w-1/3 p-0 relative">
+                        <div className="card-body p-4">
+                          <LinkIcon className="size-8" />
+                          <h2 className="card-title mt-2">Link shareable</h2>
+                          <p className="text-base text-start">
+                            Anyone with the link can view
+                          </p>
+                          <div className="form-control absolute top-4 right-4">
+                            <label className="cursor-pointer label">
+                              <input
+                                type="checkbox"
+                                className="checkbox checkbox-secondary"
+                              />
+                            </label>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <div className="card border w-1/3 p-0 relative">
-                    <div className="card-body p-4">
-                      <KeyIcon className="size-8" />
-                      <h2 className="card-title mt-2">Private</h2>
-                      <p className="text-base text-start">
-                        Onli collaborators can access
-                      </p>
-                      <div className="form-control absolute top-4 right-4">
-                        <label className="cursor-pointer label">
-                          <input
-                            type="checkbox"
-                            className="checkbox checkbox-secondary"
-                          />
-                        </label>
+                      <div className="card border w-1/3 p-0 relative">
+                        <div className="card-body p-4">
+                          <KeyIcon className="size-8" />
+                          <h2 className="card-title mt-2">Private</h2>
+                          <p className="text-base text-start">
+                            Onli collaborators can access
+                          </p>
+                          <div className="form-control absolute top-4 right-4">
+                            <label className="cursor-pointer label">
+                              <input
+                                type="checkbox"
+                                className="checkbox checkbox-secondary"
+                              />
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="card bg-base-100 w-full border shadow-md p-0">
-              <div className="card-body">
-                <h2 className="card-title">Discussions</h2>
-                <p className="text-base text-start">
-                  Control who can leave comments on this project.
-                </p>
-                <div className="flex gap-2">
-                  <div className="card border w-1/2 p-0 relative">
-                    <div className="card-body p-4">
-                      <GlobeAsiaAustraliaIcon className="size-8" />
-                      <h2 className="card-title mt-2">Anyone</h2>
-                      <p className="text-base text-start">Anyone can comment</p>
-                      <div className="form-control absolute top-4 right-4">
-                        <label className="cursor-pointer label">
-                          <input
-                            type="checkbox"
-                            defaultChecked
-                            className="checkbox checkbox-secondary"
-                          />
-                        </label>
+                <div className="card bg-base-100 w-full border p-0">
+                  <div className="card-body">
+                    <h2 className="card-title">Discussions</h2>
+                    <p className="text-base text-start">
+                      Control who can leave comments on this project.
+                    </p>
+                    <div className="flex gap-2">
+                      <div className="card border w-1/2 p-0 relative">
+                        <div className="card-body p-4">
+                          <GlobeAsiaAustraliaIcon className="size-8" />
+                          <h2 className="card-title mt-2">Anyone</h2>
+                          <p className="text-base text-start">
+                            Anyone can comment
+                          </p>
+                          <div className="form-control absolute top-4 right-4">
+                            <label className="cursor-pointer label">
+                              <input
+                                type="checkbox"
+                                defaultChecked
+                                className="checkbox checkbox-secondary"
+                              />
+                            </label>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <div className="card border w-1/2 p-0 relative">
-                    <div className="card-body p-4">
-                      <LinkIcon className="size-8" />
-                      <h2 className="card-title mt-2">Collaborators</h2>
-                      <p className="text-base text-start">
-                        Only collaborators can comment
-                      </p>
-                      <div className="form-control absolute top-4 right-4">
-                        <label className="cursor-pointer label">
-                          <input
-                            type="checkbox"
-                            className="checkbox checkbox-secondary"
-                          />
-                        </label>
+                      <div className="card border w-1/2 p-0 relative">
+                        <div className="card-body p-4">
+                          <LinkIcon className="size-8" />
+                          <h2 className="card-title mt-2">Collaborators</h2>
+                          <p className="text-base text-start">
+                            Only collaborators can comment
+                          </p>
+                          <div className="form-control absolute top-4 right-4">
+                            <label className="cursor-pointer label">
+                              <input
+                                type="checkbox"
+                                className="checkbox checkbox-secondary"
+                              />
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="card bg-base-100 w-full border shadow-md p-0">
-              <div className="card-body">
-                <h2 className="card-title mb-4">Delete project</h2>
-                <div role="alert" className="alert">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    className="stroke-info h-6 w-6 shrink-0"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                  <span>
-                    Permanently delete this project and all of its content from
-                    the Speckle platform. This action is not reversible.
-                  </span>
-                  <div>
-                    <button className="btn btn-sm">Deny</button>
-                    <button className="btn btn-sm btn-primary ms-4">
-                      Accept
-                    </button>
+                <div className="card bg-base-100 w-full border p-0">
+                  <div className="card-body">
+                    <h2 className="card-title mb-4">Delete project</h2>
+                    <div role="alert" className="alert">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        className="stroke-info h-6 w-6 shrink-0"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                      <span>
+                        Permanently delete this project and all of its content
+                        from the Speckle platform. This action is not
+                        reversible.
+                      </span>
+                      <div>
+                        <button className="btn btn-sm">Deny</button>
+                        <button className="btn btn-sm btn-primary ms-4">
+                          Accept
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </>
+            ) : setTabActive == 'collaborators' ? (
+              <></>
+            ) : (
+              <></>
+            )}
           </div>
         </div>
       )}

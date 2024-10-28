@@ -4,7 +4,7 @@ import { HomeIcon } from '@heroicons/react/24/outline'
 export default function Navbar() {
   return (
     <div
-      className="navbar bg-base-100 px-6 shadow sticky top-0 z-10"
+      className="navbar bg-base-100 h-[10vh] px-6 shadow sticky top-0 z-50"
       id="navbar"
     >
       <div className="navbar-start">

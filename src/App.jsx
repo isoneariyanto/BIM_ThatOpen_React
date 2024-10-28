@@ -12,12 +12,10 @@ import NotFound_404 from './routes/NotFound_404'
 import BimModel from './routes/BimModel'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <div className="w-screen h-screen bg-gray-50">
+    <div className="w-screen h-screen bg-gray-50 relative">
       <Navbar />
-      <main>
+      <main className="overflow-x-hidden overflow-y-auto h-[90vh]">
         <Routes>
           <Route index element={<Home />} />
           <Route path="project" element={<Project />} />

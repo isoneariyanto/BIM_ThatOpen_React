@@ -93,12 +93,12 @@ export default function Project({}) {
   })
 
   async function loadWorld(pos) {
+    const components = new OBC.Components()
+    const fragments = components.get(OBC.FragmentsManager)
+    const fragmentIfcLoader = components.get(OBC.IfcLoader)
+    const worlds = components.get(OBC.Worlds)
+    const world = worlds.create()
     if (world.renderer == null) {
-      const components = new OBC.Components()
-      const fragments = components.get(OBC.FragmentsManager)
-      const fragmentIfcLoader = components.get(OBC.IfcLoader)
-      const worlds = components.get(OBC.Worlds)
-      const world = worlds.create()
       const container = document.getElementById('canvas-container-' + pos)
       world.scene = new OBC.SimpleScene(components)
       world.renderer = new OBC.SimpleRenderer(components, container)
