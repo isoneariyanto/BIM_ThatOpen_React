@@ -1,7 +1,9 @@
+import Hero from "../components/Hero";
+
 export default function Home({}) {
   return (
-    <>
-      <h1>Home page</h1>
-    </>
+    <div className="h-screen w-full">
+      <Hero />
+    </div>
   );
 }
