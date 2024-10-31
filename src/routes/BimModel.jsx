@@ -23,6 +23,7 @@ import * as BUI from '@thatopen/ui'
 import * as OBC from '@thatopen/components'
 import * as WEBIFC from 'web-ifc'
 import * as THREE from 'three'
+import * as OBCF from '@thatopen/components-front'
 import { useEffect, useState } from 'react'
 import { randInt } from 'three/src/math/MathUtils.js'
 import { Link, Navigate, NavLink, useParams } from 'react-router-dom'
@@ -36,6 +37,7 @@ const btnList = [
     tooltip: 'Models (Shift + m)',
     icon: <CubeIcon className="size-5" />,
     class: 'modal',
+    child: <></>,
   },
   {
     id: 2,
@@ -43,6 +45,7 @@ const btnList = [
     tooltip: 'Scene explorer (Shift + e)',
     icon: <ShareIcon className="size-5" />,
     class: 'modal',
+    child: <></>,
   },
   {
     id: 3,
@@ -50,6 +53,7 @@ const btnList = [
     tooltip: 'Discussions (Shift + t)',
     icon: <ChatBubbleBottomCenterTextIcon className="size-5" />,
     class: 'modal',
+    child: <></>,
   },
   {
     id: 4,
@@ -57,6 +61,7 @@ const btnList = [
     tooltip: 'Measure mode (Shift + r)',
     icon: <PencilIcon className="size-5" />,
     class: 'modal',
+    child: <></>,
   },
   {
     id: 5,
@@ -120,9 +125,15 @@ const btnList = [
   {
     id: 8,
     title: 'Section box',
-    tooltip: 'Section box (Shift + B)',
+    tooltip: 'Section box',
     icon: <ScissorsIcon className="size-5" />,
-    class: 'btn',
+    class: 'modal',
+    child: (
+      <div className="text-start">
+        <h6>Double click : Create clipping plane</h6>
+        <h6>Delete Key : Delete clipping plane</h6>
+      </div>
+    ),
   },
   {
     id: 9,
@@ -142,23 +153,31 @@ const btnList = [
 
 export default function BimModel() {
   const [btnActive, setBtnActive] = useState(1)
-  const [uuid, setUuid] = useState()
+  const [isClipper, setIsClipper] = useState(false)
 
   const components = new OBC.Components()
   const worlds = components.get(OBC.Worlds)
   const fragments = components.get(OBC.FragmentsManager)
   const fragmentIfcLoader = components.get(OBC.IfcLoader)
   const world = worlds.create()
+  const casters = components.get(OBC.Raycasters)
+  const clipper = components.get(OBC.Clipper)
+  const measurements = components.get(OBC.MeasurementUtils)
+  const shadows = components.get(OBCF.ShadowDropper)
+
   async function loadWorld() {
     if (world.renderer == null) {
-      console.log(world)
       const container = document.getElementById('bim-model-canvas')
       world.scene = new OBC.SimpleScene(components)
-      world.renderer = new OBC.SimpleRenderer(components, container)
+      world.renderer = new OBCF.RendererWith2D(components, container)
       world.camera = new OBC.OrthoPerspectiveCamera(components)
       components.init()
 
       await world.camera.controls.setLookAt(5, 5, 5, 0, 0, -10)
+      container.appendChild(world.renderer.three2D.domElement)
+
+      // const grids = components.get(OBC.Grids)
+      // grids.create(world).config.color.setHex(0xdddddd)
 
       world.scene.setup()
       world.camera.controls.distance = 70
@@ -186,7 +205,18 @@ export default function BimModel() {
       model.traverse((obj) => (obj.frustumCulled = false))
       world.scene.three.add(model)
       world.meshes.add(model)
+
+      const caster = casters.get(world)
+
+      clipper.enabled = true
       world.camera.controls.dollyTo(25, true)
+
+      shadows.shadowExtraScaleFactor = 3
+      shadows.shadowOffset = 0.1
+      const shadowID = world.uuid
+      shadows.create([model], shadowID, world)
+
+      // button click action here
 
       let fitScreen = document
         .getElementById('btn-6')
@@ -197,11 +227,26 @@ export default function BimModel() {
       let SectionBox = document
         .getElementById('btn-8')
         .addEventListener('click', () => {
-          world.camera.controls.fitToSphere(model, true)
+          container.ondblclick = () => {
+            if (clipper.enabled) {
+              clipper.create(world)
+              clipper.config.size = 5
+              clipper.config.color = new THREE.Color(0x65cc8a)
+              setIsClipper(true)
+            }
+          }
+        })
+
+      let resetPlane = document
+        .getElementById('resetPlane')
+        .addEventListener('click', () => {
+          if (clipper.enabled) {
+            clipper.deleteAll()
+            setIsClipper(false)
+          }
         })
 
       const view = [51, 52, 53, 54, 55]
-
       view.map((i) => {
         document.getElementById(i).addEventListener('click', () => {
           if (i == 51)
@@ -224,79 +269,36 @@ export default function BimModel() {
     }
   }
 
+  window.onkeydown = (event) => {
+    event = event || window.event
+    if (event.shiftKey) {
+      switch (event.keyCode) {
+        case 77: // shift + m
+          setBtnActive(1)
+          break
+        case 69: // shift + e
+          setBtnActive(2)
+          break
+        case 84: // shift + t
+          setBtnActive(3)
+          break
+        case 82: // shift + r
+          setBtnActive(4)
+          break
+      }
+    }
+  }
+
   useEffect(() => {
     loadWorld()
   }, [])
 
   useEffect(() => {
-    async function more() {
-      const container = document.getElementById('bim-model-canvas')
-
-      world.scene = new OBC.SimpleScene(components)
-      world.renderer = new OBC.SimpleRenderer(components, container)
-      world.camera = new OBC.SimpleCamera(components)
-      world.scene.setup()
-      await world.camera.controls.setLookAt(5, 5, 5, 0, 0, -10)
-
-      components.init()
-      world.camera.controls.distance = 70
-      world.scene.three.background = new THREE.Color(0xf1f1f1)
-
-      // const cullers = components.get(OBC.Cullers)
-      // const culler = cullers.create(world)
-
-      // culler.config.threshold = 200
-      // culler.config.renderDebugFrame = true
-
-      // const debugFrame = culler.renderer.domElement
-      // document.body.appendChild(debugFrame)
-      // debugFrame.style.position = 'fixed'
-      // debugFrame.style.left = '0'
-      // debugFrame.style.bottom = '0'
-      // debugFrame.style.visibility = 'collapse'
-
-      // let grids = components.get(OBC.Grids)
-      // let grid = grids.create(world)
-
-      await fragmentIfcLoader.setup()
-      const excludedCats = [
-        WEBIFC.IFCTENDONANCHOR,
-        WEBIFC.IFCREINFORCINGBAR,
-        WEBIFC.IFCREINFORCINGELEMENT,
-      ]
-
-      for (const cat of excludedCats) {
-        fragmentIfcLoader.settings.excludedCategories.add(cat)
-      }
-      fragmentIfcLoader.settings.webIfc.COORDINATE_TO_ORIGIN = true
-
-      const file = await fetch(
-        'https://thatopen.github.io/engine_components/resources/small.ifc'
-      )
-      const data = await file.arrayBuffer()
-      const buffer = new Uint8Array(data)
-      const model = await fragmentIfcLoader.load(buffer)
-      model.name = 'example'
-      model.traverse((obj) => (obj.frustumCulled = false))
-      world.scene.three.add(model)
-      world.meshes.add(model)
-      world.camera.controls.dollyTo(25, true)
-    }
-
-    more()
-    // if (btnActive == 6) {
-    //   components.dispose()
-    //   const components = new OBC.Components()
-    //   const fragments = components.get(OBC.FragmentsManager)
-    //   const fragmentIfcLoader = components.get(OBC.IfcLoader)
-    //   const worlds = components.get(OBC.Worlds)
-    //   const world = worlds.create()
-    //   loadWorld()
-    // }
-  }, [btnActive])
+    console.log(isClipper)
+  }, [isClipper])
 
   return (
-    <div className="relative">
+    <div className="relative" id="bim-wrapper">
       <div className="min-w-min absolute top-4 left-4 flex gap-4">
         <div className="flex flex-col gap-2" id="btn-container">
           {btnList.map((btn, index) => {
@@ -359,16 +361,21 @@ export default function BimModel() {
             >
               <div className="card-body p-0">
                 <h2 className="card-title">{btn.title}</h2>
-                <p>If a dog chews shoes whose shoes does he choose?</p>
-                <div className="card-actions justify-end">
-                  <button className="btn btn-primary">Buy Now</button>
-                </div>
+                {btn.child}
               </div>
             </div>
           ))}
         </div>
       </div>
       <div className="w-full h-[90vh]" id="bim-model-canvas"></div>
+      <button
+        className={`btn btn-primary text-white absolute bottom-10 left-1/2 -translate-x-1/2 py-2 ${
+          isClipper ? 'visible' : 'invisible'
+        }`}
+        id="resetPlane"
+      >
+        Delete Plane
+      </button>
     </div>
   )
 }
