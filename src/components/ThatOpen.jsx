@@ -2,6 +2,7 @@ import Stats from "three/examples/jsm/libs/stats.module";
 import * as BUI from "@thatopen/ui";
 import * as OBC from "@thatopen/components";
 import * as WEBIFC from "web-ifc";
+import * as THREE from "three";
 import { useEffect, useState } from "react";
 
 export default function ThatOpen({}) {
@@ -13,12 +14,20 @@ export default function ThatOpen({}) {
   const fragmentIfcLoader = components.get(OBC.IfcLoader);
   const worlds = components.get(OBC.Worlds);
   const world = worlds.create();
+  const camera = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    0.01,
+    2000
+  );
   async function loadWorld() {
     const container = document.getElementById("canvas-container");
     world.scene = new OBC.SimpleScene(components);
     world.renderer = new OBC.SimpleRenderer(components, container);
-    world.camera = new OBC.SimpleCamera(components);
+    world.camera = new OBC.OrthoPerspectiveCamera(components);
     components.init();
+
+    // world.camera.three.add(camera);
 
     world.camera.controls.setLookAt(12, 6, 8, 0, 0, -10);
     world.scene.setup();
@@ -44,9 +53,31 @@ export default function ThatOpen({}) {
     const file = e.target.files[0];
     const data = await file.arrayBuffer();
     const buffer = new Uint8Array(data);
-    const model = await fragmentIfcLoader.load(buffer);
+    let model = await fragmentIfcLoader.load(buffer);
     model.name = "example";
     world.scene.three.add(model);
+
+    world.camera.controls.camera.traverse(function (obj) {
+      obj.frustumCulled = false;
+    });
+
+    world.camera.controls.boundaryEnclosesCamera = false;
+    world.camera.controls.camera.far = 3000;
+    world.camera.controls.camera.near = 10;
+    world.camera.controls.camera.focus = 100;
+    world.camera.controls.camera.filmOffset = 100;
+    // world.camera.controls.camera.aspect =
+    //   window.innerWidth / window.innerHeight;
+    // model.traverse(function (obj) {
+    //   obj.frustumCulled = false;
+    // });
+    world.camera.controls.addEventListener("control", (e) => {
+      // console.log(`distance : ${world.camera.controls.distance} |
+      //   zoom : ${world.camera.controls.distance} | ${e}
+      //   `);
+      console.log(e.target._camera);
+      console.log(e.target._camera.filmOffset);
+    });
   }
 
   function disposeFragments() {
