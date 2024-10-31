@@ -30,7 +30,7 @@ export default function Navbar() {
             className="menu dropdown-content bg-base-100 rounded-box z-[1] mt-4 w-52 p-2 shadow"
           >
             <li>
-              <Link to={'/project'}>Item 1</Link>
+              <Link to={'/'}>Home</Link>
             </li>
             <li>
               <Link to={`/project`}>Projects</Link>

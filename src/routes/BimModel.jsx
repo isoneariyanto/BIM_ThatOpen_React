@@ -86,10 +86,9 @@ export default function BimModel() {
   const fragmentIfcLoader = components.get(OBC.IfcLoader)
   const worlds = components.get(OBC.Worlds)
   const world = worlds.create()
-  BUI.Manager.init()
-
   async function loadWorld() {
     if (world.renderer == null) {
+      console.log(world)
       const container = document.getElementById('bim-model-canvas')
 
       world.scene = new OBC.SimpleScene(components)
@@ -149,19 +148,79 @@ export default function BimModel() {
       //   culler.needsUpdate = true
       // })
       // if (propsBtnActive == 6) world.camera.controls.fitToBox(model)
-      const btnContainer = document.getElementById('btn-container')
-      const html = `
-      
-      `
-
-      btnContainer.append()
-      console.log(world.components.get())
     }
   }
 
   useEffect(() => {
     loadWorld()
   }, [])
+
+  useEffect(() => {
+    async function more() {
+      const container = document.getElementById('bim-model-canvas')
+
+      world.scene = new OBC.SimpleScene(components)
+      world.renderer = new OBC.SimpleRenderer(components, container)
+      world.camera = new OBC.SimpleCamera(components)
+      world.scene.setup()
+      await world.camera.controls.setLookAt(5, 5, 5, 0, 0, -10)
+
+      components.init()
+      world.camera.controls.distance = 70
+      world.scene.three.background = new THREE.Color(0xf1f1f1)
+
+      // const cullers = components.get(OBC.Cullers)
+      // const culler = cullers.create(world)
+
+      // culler.config.threshold = 200
+      // culler.config.renderDebugFrame = true
+
+      // const debugFrame = culler.renderer.domElement
+      // document.body.appendChild(debugFrame)
+      // debugFrame.style.position = 'fixed'
+      // debugFrame.style.left = '0'
+      // debugFrame.style.bottom = '0'
+      // debugFrame.style.visibility = 'collapse'
+
+      // let grids = components.get(OBC.Grids)
+      // let grid = grids.create(world)
+
+      await fragmentIfcLoader.setup()
+      const excludedCats = [
+        WEBIFC.IFCTENDONANCHOR,
+        WEBIFC.IFCREINFORCINGBAR,
+        WEBIFC.IFCREINFORCINGELEMENT,
+      ]
+
+      for (const cat of excludedCats) {
+        fragmentIfcLoader.settings.excludedCategories.add(cat)
+      }
+      fragmentIfcLoader.settings.webIfc.COORDINATE_TO_ORIGIN = true
+
+      const file = await fetch(
+        'https://thatopen.github.io/engine_components/resources/small.ifc'
+      )
+      const data = await file.arrayBuffer()
+      const buffer = new Uint8Array(data)
+      const model = await fragmentIfcLoader.load(buffer)
+      model.name = 'example'
+      model.traverse((obj) => (obj.frustumCulled = false))
+      world.scene.three.add(model)
+      world.meshes.add(model)
+      world.camera.controls.dollyTo(25, true)
+    }
+
+    more()
+    // if (btnActive == 6) {
+    //   components.dispose()
+    //   const components = new OBC.Components()
+    //   const fragments = components.get(OBC.FragmentsManager)
+    //   const fragmentIfcLoader = components.get(OBC.IfcLoader)
+    //   const worlds = components.get(OBC.Worlds)
+    //   const world = worlds.create()
+    //   loadWorld()
+    // }
+  }, [btnActive])
 
   return (
     <div className="relative">
