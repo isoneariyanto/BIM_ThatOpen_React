@@ -27,7 +27,7 @@ import React from 'react'
 export default function BimModel() {
   const [btnActive, setBtnActive] = useState(1)
   const [isClipper, setIsClipper] = useState(false)
-  const [measurementType, setMeasurementType] = useState('area')
+  const [measurementType, setMeasurementType] = useState('')
 
   const btnList = [
     {
@@ -86,7 +86,7 @@ export default function BimModel() {
                   type="radio"
                   name="radio-10"
                   className="radio checked:bg-red-500 radio-sm"
-                  defaultChecked={measurementType == 'area' ? true : false}
+                  // defaultChecked={measurementType === 'area' ? true : false}
                   id="area"
                 />
                 <h6 className="label-text flex flex-col items-start">
@@ -102,6 +102,7 @@ export default function BimModel() {
                 <input
                   type="radio"
                   name="radio-10"
+                  // defaultChecked={measurementType === 'angle' ? true : false}
                   className="radio checked:bg-blue-500 radio-sm"
                   id="angle"
                 />
@@ -114,7 +115,10 @@ export default function BimModel() {
               </label>
             </div>
           </div>
-          <button className="p-2 rounded text-[#cc0808] flex gap-4 mt-6 justify-center w-fit border rounded-lg">
+          <button
+            className="p-2 rounded text-[#cc0808] flex gap-4 mt-6 justify-center w-fit border rounded-lg"
+            id="deleteMeasurement"
+          >
             <TrashIcon className="size-5" />
             <span className="text-sm">Delete all measurements</span>
           </button>
@@ -232,7 +236,8 @@ export default function BimModel() {
   const clipper = components.get(OBC.Clipper)
   const measurements = components.get(OBC.MeasurementUtils)
   const shadows = components.get(OBCF.ShadowDropper)
-  const areaDims = components.get(OBCF.AreaMeasurement)
+  const area = components.get(OBCF.AreaMeasurement)
+  const angles = components.get(OBCF.AngleMeasurement)
 
   async function loadWorld() {
     if (world.renderer == null) {
@@ -286,30 +291,25 @@ export default function BimModel() {
       shadows.create([model], shadowID, world)
 
       // button click action here
-
-      let measurements = document
-        .getElementById('btn-4')
+      document.getElementById('area').addEventListener('click', () => {
+        area.world = world
+        area.enabled = true
+        container.ondblclick = () => area.create()
+        container.oncontextmenu = () => area.endCreation()
+      })
+      document.getElementById('angle').addEventListener('click', () => {
+        angles.world = world
+        angles.enabled = true
+        container.ondblclick = () => angles.create()
+        container.oncontextmenu = () => angles.endCreation()
+      })
+      let deleteMeasurement = document
+        .getElementById('deleteMeasurement')
         .addEventListener('click', () => {
-          console.log(measurementType)
-          if (measurementType == 'angle') {
-            document.getElementById('area').addEventListener('click', () => {
-              setMeasurementType('angle')
-              // areaDims.world = world
-              // areaDims.enabled = true
-              // container.ondblclick = () => areaDims.create()
-              // container.oncontextmenu = () => areaDims.endCreation()
-              console.log('area')
-            })
-          } else {
-            document.getElementById('angle').addEventListener('click', () => {
-              setMeasurementType('area')
-              console.log('angle')
-              // areaDims.world = world
-              // areaDims.enabled = true
-              // container.ondblclick = () => areaDims.create()
-              // container.oncontextmenu = () => areaDims.endCreation()
-            })
-          }
+          angles.deleteAll()
+          area.deleteAll()
+          angles.enabled = false
+          area.enabled = false
         })
 
       let fitScreen = document
@@ -454,6 +454,7 @@ export default function BimModel() {
                     : 'visible'
                   : 'invisible'
               }`}
+              key={index}
             >
               <div className="card-body p-0">
                 <h2 className="card-title">{btn.title}</h2>
