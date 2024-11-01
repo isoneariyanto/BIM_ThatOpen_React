@@ -6,13 +6,7 @@ import {
   SparklesIcon,
   ChatBubbleBottomCenterTextIcon,
   PencilIcon,
-  ClockIcon,
-  Square2StackIcon,
-  Squares2X2Icon,
-  CubeTransparentIcon,
-  GlobeAsiaAustraliaIcon,
-  KeyIcon,
-  LinkIcon,
+  TrashIcon,
   PuzzlePieceIcon,
   ScissorsIcon,
   ArrowPathRoundedSquareIcon,
@@ -30,130 +24,204 @@ import { Link, Navigate, NavLink, useParams } from 'react-router-dom'
 import ThatOpenTry from '../components/ThatOpenTry'
 import React from 'react'
 
-const btnList = [
-  {
-    id: 1,
-    title: 'Models',
-    tooltip: 'Models (Shift + m)',
-    icon: <CubeIcon className="size-5" />,
-    class: 'modal',
-    child: <></>,
-  },
-  {
-    id: 2,
-    title: 'Scene explorer',
-    tooltip: 'Scene explorer (Shift + e)',
-    icon: <ShareIcon className="size-5" />,
-    class: 'modal',
-    child: <></>,
-  },
-  {
-    id: 3,
-    title: 'Discussions',
-    tooltip: 'Discussions (Shift + t)',
-    icon: <ChatBubbleBottomCenterTextIcon className="size-5" />,
-    class: 'modal',
-    child: <></>,
-  },
-  {
-    id: 4,
-    title: 'Measure mode',
-    tooltip: 'Measure mode (Shift + r)',
-    icon: <PencilIcon className="size-5" />,
-    class: 'modal',
-    child: <></>,
-  },
-  {
-    id: 5,
-    title: 'Views',
-    tooltip: 'Views',
-    icon: <SparklesIcon className="size-5" />,
-    class: 'dropdown',
-    child: (
-      <>
-        <li className="text-center" id="51">
-          <a>Top</a>
-        </li>
-        <li className="text-center" id="52">
-          <a>Front</a>
-        </li>
-        <li className="text-center" id="53">
-          <a>Left</a>
-        </li>
-        <li className="text-center" id="54">
-          <a>Back</a>
-        </li>
-        <li className="text-center" id="55">
-          <a>Right</a>
-        </li>
-      </>
-    ),
-  },
-  {
-    id: 6,
-    title: 'Fit to screen',
-    tooltip: 'Fit to screen',
-    icon: <ArrowsPointingOutIcon className="size-5" />,
-    class: 'btn',
-  },
-  {
-    id: 7,
-    title: 'Light controls',
-    tooltip: 'Light controls',
-    icon: <SunIcon className="size-5" />,
-    class: 'dropdown',
-    child: (
-      <>
-        <li>
-          <a>Top</a>
-        </li>
-        <li>
-          <a>Front</a>
-        </li>
-        <li>
-          <a>Left</a>
-        </li>
-        <li>
-          <a>Back</a>
-        </li>
-        <li>
-          <a>Right</a>
-        </li>
-      </>
-    ),
-  },
-  {
-    id: 8,
-    title: 'Section box',
-    tooltip: 'Section box',
-    icon: <ScissorsIcon className="size-5" />,
-    class: 'modal',
-    child: (
-      <div className="text-start">
-        <h6>Double click : Create clipping plane</h6>
-        <h6>Delete Key : Delete clipping plane</h6>
-      </div>
-    ),
-  },
-  {
-    id: 9,
-    title: 'Explode',
-    tooltip: 'Explode',
-    icon: <PuzzlePieceIcon className="size-5" />,
-    class: 'btn',
-  },
-  {
-    id: 10,
-    title: 'Free orbit',
-    tooltip: 'Free orbit',
-    icon: <ArrowPathRoundedSquareIcon className="size-5" />,
-    class: 'btn',
-  },
-]
-
 export default function BimModel() {
   const [btnActive, setBtnActive] = useState(1)
   const [isClipper, setIsClipper] = useState(false)
+  const [measurementType, setMeasurementType] = useState('area')
+
+  const btnList = [
+    {
+      id: 1,
+      title: 'Models',
+      tooltip: 'Models (Shift + m)',
+      icon: <CubeIcon className="size-5" />,
+      class: 'modal',
+      child: <></>,
+    },
+    {
+      id: 2,
+      title: 'Scene explorer',
+      tooltip: 'Scene explorer (Shift + e)',
+      icon: <ShareIcon className="size-5" />,
+      class: 'modal',
+      child: <></>,
+    },
+    {
+      id: 3,
+      title: 'Discussions',
+      tooltip: 'Discussions (Shift + t)',
+      icon: <ChatBubbleBottomCenterTextIcon className="size-5" />,
+      class: 'modal',
+      child: <></>,
+    },
+    {
+      id: 4,
+      title: 'Measure mode',
+      tooltip: 'Measure mode (Shift + r)',
+      icon: <PencilIcon className="size-5" />,
+      class: 'modal',
+      child: (
+        <div className="flex flex-col items-center">
+          <div role="alert" className="alert p-1 rounded-md text-sm ">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="stroke-info h-6 w-6 shrink-0"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <span>Reloading will delete all measurements</span>
+          </div>
+          <div className="flex flex-col mt-4">
+            <h6 className="text-start">Measurement Type</h6>
+            <div className="form-control">
+              <label className="label cursor-pointer flex justify-start gap-4">
+                <input
+                  type="radio"
+                  name="radio-10"
+                  className="radio checked:bg-red-500 radio-sm"
+                  defaultChecked={measurementType == 'area' ? true : false}
+                  id="area"
+                />
+                <h6 className="label-text flex flex-col items-start">
+                  <span className="text-base font-medium">Area</span>
+                  <span className="text-xs text-slate-400">
+                    Choose two or more points for precise measurements
+                  </span>
+                </h6>
+              </label>
+            </div>
+            <div className="form-control">
+              <label className="label cursor-pointer flex justify-start gap-4">
+                <input
+                  type="radio"
+                  name="radio-10"
+                  className="radio checked:bg-blue-500 radio-sm"
+                  id="angle"
+                />
+                <h6 className="label-text flex flex-col items-start">
+                  <span className="text-base font-medium">Angle</span>
+                  <span className="text-xs text-slate-400">
+                    Choose two or more points for precise measurements
+                  </span>
+                </h6>
+              </label>
+            </div>
+          </div>
+          <button className="p-2 rounded text-[#cc0808] flex gap-4 mt-6 justify-center w-fit border rounded-lg">
+            <TrashIcon className="size-5" />
+            <span className="text-sm">Delete all measurements</span>
+          </button>
+        </div>
+      ),
+    },
+    {
+      id: 5,
+      title: 'Views',
+      tooltip: 'Views',
+      icon: <SparklesIcon className="size-5" />,
+      class: 'dropdown',
+      child: (
+        <>
+          <li className="text-center" id="51">
+            <a>Top</a>
+          </li>
+          <li className="text-center" id="52">
+            <a>Front</a>
+          </li>
+          <li className="text-center" id="53">
+            <a>Left</a>
+          </li>
+          <li className="text-center" id="54">
+            <a>Back</a>
+          </li>
+          <li className="text-center" id="55">
+            <a>Right</a>
+          </li>
+        </>
+      ),
+    },
+    {
+      id: 6,
+      title: 'Fit to screen',
+      tooltip: 'Fit to screen',
+      icon: <ArrowsPointingOutIcon className="size-5" />,
+      class: 'btn',
+    },
+    {
+      id: 7,
+      title: 'Light controls',
+      tooltip: 'Light controls',
+      icon: <SunIcon className="size-5" />,
+      class: 'dropdown',
+      child: (
+        <>
+          <li>
+            <a>Top</a>
+          </li>
+          <li>
+            <a>Front</a>
+          </li>
+          <li>
+            <a>Left</a>
+          </li>
+          <li>
+            <a>Back</a>
+          </li>
+          <li>
+            <a>Right</a>
+          </li>
+        </>
+      ),
+    },
+    {
+      id: 8,
+      title: 'Section box',
+      tooltip: 'Section box',
+      icon: <ScissorsIcon className="size-5" />,
+      class: 'modal',
+      child: (
+        <div className="text-start">
+          <h6>Double click : Create clipping plane</h6>
+          <h6>Delete button : Delete clipping plane</h6>
+        </div>
+      ),
+    },
+    {
+      id: 9,
+      title: 'Explode',
+      tooltip: 'Explode (Ongoing Feature)',
+      icon: <PuzzlePieceIcon className="size-5" />,
+      class: 'dropdown',
+      child: (
+        <div className="flex gap-4">
+          <input
+            type="range"
+            min={0}
+            max="100"
+            step={1}
+            defaultValue={0}
+            id="intensity"
+            className="range range-success range-sm"
+          />
+          <h6>Intensity</h6>
+        </div>
+      ),
+    },
+    {
+      id: 10,
+      title: 'Free orbit',
+      tooltip: 'Free orbit',
+      icon: <ArrowPathRoundedSquareIcon className="size-5" />,
+      class: 'btn',
+    },
+  ]
 
   const components = new OBC.Components()
   const worlds = components.get(OBC.Worlds)
@@ -164,6 +232,7 @@ export default function BimModel() {
   const clipper = components.get(OBC.Clipper)
   const measurements = components.get(OBC.MeasurementUtils)
   const shadows = components.get(OBCF.ShadowDropper)
+  const areaDims = components.get(OBCF.AreaMeasurement)
 
   async function loadWorld() {
     if (world.renderer == null) {
@@ -218,6 +287,31 @@ export default function BimModel() {
 
       // button click action here
 
+      let measurements = document
+        .getElementById('btn-4')
+        .addEventListener('click', () => {
+          console.log(measurementType)
+          if (measurementType == 'angle') {
+            document.getElementById('area').addEventListener('click', () => {
+              setMeasurementType('angle')
+              // areaDims.world = world
+              // areaDims.enabled = true
+              // container.ondblclick = () => areaDims.create()
+              // container.oncontextmenu = () => areaDims.endCreation()
+              console.log('area')
+            })
+          } else {
+            document.getElementById('angle').addEventListener('click', () => {
+              setMeasurementType('area')
+              console.log('angle')
+              // areaDims.world = world
+              // areaDims.enabled = true
+              // container.ondblclick = () => areaDims.create()
+              // container.oncontextmenu = () => areaDims.endCreation()
+            })
+          }
+        })
+
       let fitScreen = document
         .getElementById('btn-6')
         .addEventListener('click', () => {
@@ -246,6 +340,12 @@ export default function BimModel() {
           }
         })
 
+      // ongoing feature
+      let intensity = document.getElementById('intensity')
+      intensity.addEventListener('change', (e) => {
+        e.target.setAttribute('value', e.target.value)
+      })
+
       const view = [51, 52, 53, 54, 55]
       view.map((i) => {
         document.getElementById(i).addEventListener('click', () => {
@@ -261,11 +361,11 @@ export default function BimModel() {
         })
       })
 
-      world.camera.controls.addEventListener(
-        'control',
-        (e) => console.log(world.camera.controls.getPosition())
-        // console.log(world.camera.controls.getTarget())
-      )
+      // world.camera.controls.addEventListener(
+      //   'control',
+      //   (e) => console.log(world.camera.controls.getPosition())
+      // console.log(world.camera.controls.getTarget())
+      // )
     }
   }
 
@@ -292,10 +392,6 @@ export default function BimModel() {
   useEffect(() => {
     loadWorld()
   }, [])
-
-  useEffect(() => {
-    console.log(isClipper)
-  }, [isClipper])
 
   return (
     <div className="relative" id="bim-wrapper">
