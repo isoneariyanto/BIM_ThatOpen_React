@@ -132,7 +132,10 @@ export default function BimModel() {
       icon: <SparklesIcon className="size-5" />,
       class: 'dropdown',
       child: (
-        <>
+        <ul
+          tabIndex={0}
+          className="dropdown-content ms-4 menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+        >
           <li className="text-center" id="51">
             <a>Top</a>
           </li>
@@ -148,7 +151,7 @@ export default function BimModel() {
           <li className="text-center" id="55">
             <a>Right</a>
           </li>
-        </>
+        </ul>
       ),
     },
     {
@@ -163,25 +166,199 @@ export default function BimModel() {
       title: 'Light controls',
       tooltip: 'Light controls',
       icon: <SunIcon className="size-5" />,
-      class: 'dropdown',
+      class: 'modal',
       child: (
-        <>
-          <li>
-            <a>Top</a>
-          </li>
-          <li>
-            <a>Front</a>
-          </li>
-          <li>
-            <a>Left</a>
-          </li>
-          <li>
-            <a>Back</a>
-          </li>
-          <li>
-            <a>Right</a>
-          </li>
-        </>
+        <div className="h-96 overflow-x-hidden overflow-y-auto pr-4">
+          <div className="form-control w-full border-y py-2">
+            <h6 className="text-sm font-bold">- GAMMA -</h6>
+            <label className="label cursor-pointer justify-start mt-2 p-0 gap-2">
+              <input
+                type="checkbox"
+                className="toggle toggle-secondary toggle-sm"
+                id="gammaCorrection"
+              />
+              <span className="label-text">Gamma Correction</span>
+            </label>
+          </div>
+          <div className="form-control w-full border-b py-2">
+            <h6 className="text-sm font-bold">- CUSTOM EFFECT - </h6>
+            <label className="label cursor-pointer p-0 justify-start mt-2 gap-2">
+              <input
+                type="checkbox"
+                className="toggle toggle-secondary toggle-sm"
+                id="ce"
+              />
+              <span className="label-text">Custom Effect</span>
+            </label>
+            <label className="label cursor-pointer p-0 justify-start mt-2 gap-2">
+              <input
+                type="checkbox"
+                className="toggle toggle-secondary toggle-sm"
+                id="ceGammaCorrection"
+              />
+              <span className="label-text">Gamma Correction</span>
+            </label>
+            <div className="flex gap-4 justify-between mt-2">
+              <input
+                type="range"
+                min={0}
+                max="1"
+                step={0.01}
+                defaultValue="0"
+                className="range w-7/12  range-secondary range-xs"
+                id="opacity"
+              />
+              <span className="text-sm w-auto ">Opacity</span>
+            </div>
+            <div className="flex gap-4 justify-between mt-2">
+              <input
+                type="range"
+                min={0}
+                max="6"
+                step={0.1}
+                defaultValue="0"
+                className="range w-7/12  range-secondary range-xs"
+                id="tolerance"
+              />
+              <span className="text-sm w-auto ">Tolerance</span>
+            </div>
+            <div className="flex gap-4 justify-between mt-2">
+              <input
+                type="range"
+                min={0}
+                max="5"
+                step={0.1}
+                defaultValue="0"
+                className="range w-7/12  range-secondary range-xs"
+                id="glossExponent"
+              />
+              <span className="text-sm w-auto ">Gloss exponent</span>
+            </div>
+            <div className="flex gap-4 justify-between mt-2">
+              <input
+                type="range"
+                min={-2}
+                max="2"
+                step={0.05}
+                defaultValue="0"
+                className="range w-7/12  range-secondary range-xs"
+                id="maxGloss"
+              />
+              <span className="text-sm w-auto ">Max gloss</span>
+            </div>
+            <div className="flex gap-4 justify-between mt-2">
+              <input
+                type="range"
+                min={-2}
+                max="2"
+                step={0.05}
+                defaultValue="-2"
+                className="range w-7/12  range-secondary range-xs"
+                id="minGloss"
+              />
+              <span className="text-sm w-auto ">Min gloss</span>
+            </div>
+          </div>
+          <div className="form-control w-full py-2">
+            <h6 className="text-sm font-bold">- AMBIENT OCLUSSION - </h6>
+            <label className="label cursor-pointer p-0 justify-start mt-2 gap-2">
+              <input
+                type="checkbox"
+                className="toggle toggle-secondary toggle-sm"
+                id="aoEnabled"
+              />
+              <span className="label-text">AO enabled</span>
+            </label>
+            <label className="label cursor-pointer p-0 justify-start mt-2 gap-2">
+              <input
+                type="checkbox"
+                className="toggle toggle-secondary toggle-sm"
+                id="halfResolution"
+              />
+              <span className="label-text">Half resolution</span>
+            </label>
+            <label className="label cursor-pointer p-0 justify-start mt-2 gap-2">
+              <input
+                type="checkbox"
+                className="toggle toggle-secondary toggle-sm"
+                id="screenSpaceRadius"
+              />
+              <span className="label-text">Screen space radius</span>
+            </label>
+            <div className="flex gap-4 justify-between mt-2">
+              <input
+                type="range"
+                min={1}
+                max="16"
+                step={1}
+                defaultValue="1"
+                className="range w-7/12  range-secondary range-xs"
+                id="aoSamples"
+              />
+              <span className="text-sm w-auto ">AO Samples</span>
+            </div>
+            <div className="flex gap-4 justify-between mt-2">
+              <input
+                type="range"
+                min={1}
+                max="16"
+                step={1}
+                defaultValue="1"
+                className="range w-7/12  range-secondary range-xs"
+                id="denoiseSamples"
+              />
+              <span className="text-sm w-auto ">Denoise Samples</span>
+            </div>
+            <div className="flex gap-4 justify-between mt-2">
+              <input
+                type="range"
+                min={0}
+                max="16"
+                step={1}
+                defaultValue="0"
+                className="range w-7/12  range-secondary range-xs"
+                id="aoRadius"
+              />
+              <span className="text-sm w-auto ">AO Radius</span>
+            </div>
+            <div className="flex gap-4 justify-between mt-2">
+              <input
+                type="range"
+                min={0}
+                max="100"
+                step={1}
+                defaultValue="0"
+                className="range w-7/12  range-secondary range-xs"
+                id="denoiseRadius"
+              />
+              <span className="text-sm w-auto ">Denoise Radius</span>
+            </div>
+            <div className="flex gap-4 justify-between mt-2">
+              <input
+                type="range"
+                min={0}
+                max="16"
+                step={1}
+                defaultValue="0"
+                className="range w-7/12  range-secondary range-xs"
+                id="distanceFalloff"
+              />
+              <span className="text-sm w-auto ">Distance falloff</span>
+            </div>
+            <div className="flex gap-4 justify-between mt-2">
+              <input
+                type="range"
+                min={0}
+                max="16"
+                step={1}
+                defaultValue="0"
+                className="range w-7/12  range-secondary range-xs"
+                id="intensity"
+              />
+              <span className="text-sm w-auto ">Intensity</span>
+            </div>
+          </div>
+        </div>
       ),
     },
     {
@@ -204,18 +381,23 @@ export default function BimModel() {
       icon: <PuzzlePieceIcon className="size-5" />,
       class: 'dropdown',
       child: (
-        <div className="flex gap-4">
-          <input
-            type="range"
-            min={0}
-            max="100"
-            step={1}
-            defaultValue={0}
-            id="intensity"
-            className="range range-success range-sm"
-          />
-          <h6>Intensity</h6>
-        </div>
+        <ul
+          tabIndex={0}
+          className="dropdown-content ms-4 menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+        >
+          <div className="flex gap-4">
+            <input
+              type="range"
+              min={0}
+              max="100"
+              step={1}
+              defaultValue={0}
+              id="intensity"
+              className="range range-success range-sm"
+            />
+            <h6>Intensity</h6>
+          </div>
+        </ul>
       ),
     },
     {
@@ -229,6 +411,7 @@ export default function BimModel() {
 
   const components = new OBC.Components()
   const worlds = components.get(OBC.Worlds)
+
   const fragments = components.get(OBC.FragmentsManager)
   const fragmentIfcLoader = components.get(OBC.IfcLoader)
   const world = worlds.create()
@@ -238,24 +421,29 @@ export default function BimModel() {
   const shadows = components.get(OBCF.ShadowDropper)
   const area = components.get(OBCF.AreaMeasurement)
   const angles = components.get(OBCF.AngleMeasurement)
+  const grids = components.get(OBC.Grids)
 
   async function loadWorld() {
     if (world.renderer == null) {
       const container = document.getElementById('bim-model-canvas')
       world.scene = new OBC.SimpleScene(components)
-      world.renderer = new OBCF.RendererWith2D(components, container)
+
+      // render for shadow
+      // world.renderer = new OBCF.RendererWith2D(components, container)
+      world.renderer = new OBCF.PostproductionRenderer(components, container)
+
       world.camera = new OBC.OrthoPerspectiveCamera(components)
+
       components.init()
 
       await world.camera.controls.setLookAt(5, 5, 5, 0, 0, -10)
-      container.appendChild(world.renderer.three2D.domElement)
-
-      // const grids = components.get(OBC.Grids)
-      // grids.create(world).config.color.setHex(0xdddddd)
-
+      container.appendChild(world.renderer.three.domElement)
       world.scene.setup()
-      world.camera.controls.distance = 70
+
       world.scene.three.background = new THREE.Color(0xf1f1f1)
+      world.camera.controls.distance = 70
+      const grid = grids.create(world)
+      // grid.config.color.setHex(0xdddddd)
 
       await fragmentIfcLoader.setup()
       const excludedCats = [
@@ -285,12 +473,105 @@ export default function BimModel() {
       clipper.enabled = true
       world.camera.controls.dollyTo(25, true)
 
+      // apply shadow
       shadows.shadowExtraScaleFactor = 3
       shadows.shadowOffset = 0.1
       const shadowID = world.uuid
       shadows.create([model], shadowID, world)
 
-      // button click action here
+      // apply postproduction render
+      const { postproduction } = world.renderer
+      postproduction.enabled = true
+      postproduction.customEffects.excludedMeshes.push(grid.three)
+      const ao = postproduction.n8ao.configuration
+
+      postproduction.setPasses({ gamma: false, custom: false, ao: false })
+      postproduction.customEffects.glossEnabled = false
+      postproduction.customEffects.opacity = 0
+      postproduction.customEffects.tolerance = 0
+      postproduction.customEffects.glossExponent = 0
+      postproduction.customEffects.maxGloss = 0
+      postproduction.customEffects.minGloss = -2
+      ao.halfRes = false
+      ao.screenSpaceRadius = false
+      ao.aoSamples = 1
+      ao.denoiseSamples = 1
+      ao.denoiseRadius = 0
+      ao.aoRadius = 0
+      ao.distanceFalloff = 0
+      ao.intensity = 0
+
+      // light controll
+      document
+        .getElementById('gammaCorrection')
+        .addEventListener('click', (e) => {
+          postproduction.setPasses({ gamma: e.target.checked })
+        })
+      document.getElementById('ce').addEventListener('click', (e) => {
+        postproduction.setPasses({ custom: e.target.checked })
+      })
+      document
+        .getElementById('ceGammaCorrection')
+        .addEventListener('click', (e) => {
+          postproduction.customEffects.glossEnabled = e.target.checked
+        })
+      document.getElementById('opacity').addEventListener('change', (e) => {
+        postproduction.customEffects.opacity = e.target.value
+      })
+      document.getElementById('tolerance').addEventListener('change', (e) => {
+        postproduction.customEffects.tolerance = e.target.value
+      })
+      document
+        .getElementById('glossExponent')
+        .addEventListener('change', (e) => {
+          postproduction.customEffects.glossExponent = e.target.value
+        })
+      document.getElementById('maxGloss').addEventListener('change', (e) => {
+        postproduction.customEffects.maxGloss = e.target.value
+      })
+      document.getElementById('minGloss').addEventListener('change', (e) => {
+        postproduction.customEffects.minGloss = e.target.value
+      })
+      // ------------------------
+      document.getElementById('aoEnabled').addEventListener('click', (e) => {
+        postproduction.setPasses({ ao: e.target.checked })
+      })
+      document
+        .getElementById('halfResolution')
+        .addEventListener('click', (e) => {
+          ao.halfRes = e.target.checked
+        })
+      document
+        .getElementById('screenSpaceRadius')
+        .addEventListener('click', (e) => {
+          ao.screenSpaceRadius = e.target.checked
+        })
+      document.getElementById('aoSamples').addEventListener('change', (e) => {
+        ao.aoSamples = e.target.value
+      })
+      document
+        .getElementById('denoiseSamples')
+        .addEventListener('change', (e) => {
+          ao.denoiseSamples = e.target.value
+        })
+      document.getElementById('aoRadius').addEventListener('change', (e) => {
+        ao.aoRadius = e.target.value
+      })
+      document
+        .getElementById('denoiseRadius')
+        .addEventListener('change', (e) => {
+          ao.denoiseRadius = e.target.value
+        })
+      document
+        .getElementById('distanceFalloff')
+        .addEventListener('change', (e) => {
+          ao.distanceFalloff = e.target.value
+        })
+      document.getElementById('intensity').addEventListener('change', (e) => {
+        ao.intensity = e.target.value
+      })
+
+      // measurement
       document.getElementById('area').addEventListener('click', () => {
         area.world = world
         area.enabled = true
@@ -308,16 +589,18 @@ export default function BimModel() {
         .addEventListener('click', () => {
           angles.deleteAll()
           area.deleteAll()
-          angles.enabled = false
-          area.enabled = false
+          if (area.enabled) area.enabled = false
+          if (angles.enabled) angles.enabled = false
         })
 
+      // fit screen
       let fitScreen = document
         .getElementById('btn-6')
         .addEventListener('click', () => {
           world.camera.controls.fitToSphere(model, true)
         })
 
+      // section box
       let SectionBox = document
         .getElementById('btn-8')
         .addEventListener('click', () => {
@@ -346,6 +629,7 @@ export default function BimModel() {
         e.target.setAttribute('value', e.target.value)
       })
 
+      // views
       const view = [51, 52, 53, 54, 55]
       view.map((i) => {
         document.getElementById(i).addEventListener('click', () => {
@@ -431,12 +715,8 @@ export default function BimModel() {
                   >
                     {btn.icon}
                   </button>
-                  <ul
-                    tabIndex={0}
-                    className="dropdown-content ms-4 menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
-                  >
-                    {btn.child}
-                  </ul>
+
+                  {btn.child}
                 </div>
               )
             }
@@ -457,14 +737,17 @@ export default function BimModel() {
               key={index}
             >
               <div className="card-body p-0">
-                <h2 className="card-title">{btn.title}</h2>
+                <h2 className="card-title text-lg">{btn.title}</h2>
                 {btn.child}
               </div>
             </div>
           ))}
         </div>
       </div>
-      <div className="w-full h-[90vh]" id="bim-model-canvas"></div>
+      <div
+        className="w-full h-[90vh] overflow-hidden"
+        id="bim-model-canvas"
+      ></div>
       <button
         className={`btn btn-primary text-white absolute bottom-10 left-1/2 -translate-x-1/2 py-2 ${
           isClipper ? 'visible' : 'invisible'

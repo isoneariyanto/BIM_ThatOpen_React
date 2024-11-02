@@ -1,3 +1,24 @@
+/* Scroll bar */
+::-webkit-scrollbar {
+  width: 2px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgba(191, 201, 202, 0.8);
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #99a3a4;
+}
+
 #root {
   width: 100%;
   overflow: hidden;
