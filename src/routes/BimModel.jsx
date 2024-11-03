@@ -23,6 +23,7 @@ import { randInt } from 'three/src/math/MathUtils.js'
 import { Link, Navigate, NavLink, useParams } from 'react-router-dom'
 import ThatOpenTry from '../components/ThatOpenTry'
 import React from 'react'
+import { ArrowTurnDownRightIcon } from '@heroicons/react/24/solid'
 
 export default function BimModel() {
   const [btnActive, setBtnActive] = useState(1)
@@ -85,13 +86,13 @@ export default function BimModel() {
                 <input
                   type="radio"
                   name="radio-10"
-                  className="radio checked:bg-red-500 radio-sm"
+                  className="radio radioMeasurement checked:bg-blue-500 radio-sm"
                   // defaultChecked={measurementType === 'area' ? true : false}
                   id="area"
                 />
                 <h6 className="label-text flex flex-col items-start">
                   <span className="text-base font-medium">Area</span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-slate-400 text-start">
                     Choose two or more points for precise measurements
                   </span>
                 </h6>
@@ -103,13 +104,45 @@ export default function BimModel() {
                   type="radio"
                   name="radio-10"
                   // defaultChecked={measurementType === 'angle' ? true : false}
-                  className="radio checked:bg-blue-500 radio-sm"
+                  className="radio radioMeasurement checked:bg-blue-500 radio-sm"
                   id="angle"
                 />
                 <h6 className="label-text flex flex-col items-start">
                   <span className="text-base font-medium">Angle</span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-slate-400 text-start">
                     Choose two or more points for precise measurements
+                  </span>
+                </h6>
+              </label>
+            </div>
+            <div className="form-control">
+              <label className="label cursor-pointer flex justify-start gap-4">
+                <input
+                  type="radio"
+                  name="radio-10"
+                  className="radio radioMeasurement checked:bg-blue-500 radio-sm"
+                  id="edge"
+                />
+                <h6 className="label-text flex flex-col items-start">
+                  <span className="text-base font-medium">Edge</span>
+                  <span className="text-xs text-slate-400 text-start">
+                    Choose the edge to capture measurement
+                  </span>
+                </h6>
+              </label>
+            </div>
+            <div className="form-control">
+              <label className="label cursor-pointer flex justify-start gap-4">
+                <input
+                  type="radio"
+                  name="radio-10"
+                  className="radio radioMeasurement checked:bg-blue-500 radio-sm"
+                  id="face"
+                />
+                <h6 className="label-text flex flex-col items-start">
+                  <span className="text-base font-medium">Face</span>
+                  <span className="text-xs text-slate-400 text-start">
+                    Choose one or more side of building to capture measurement
                   </span>
                 </h6>
               </label>
@@ -303,7 +336,7 @@ export default function BimModel() {
                 min={1}
                 max="16"
                 step={1}
-                defaultValue="1"
+                defaultValue="7"
                 className="range w-7/12  range-secondary range-xs"
                 id="denoiseSamples"
               />
@@ -315,7 +348,7 @@ export default function BimModel() {
                 min={0}
                 max="16"
                 step={1}
-                defaultValue="0"
+                defaultValue="9"
                 className="range w-7/12  range-secondary range-xs"
                 id="aoRadius"
               />
@@ -327,7 +360,7 @@ export default function BimModel() {
                 min={0}
                 max="100"
                 step={1}
-                defaultValue="0"
+                defaultValue="30"
                 className="range w-7/12  range-secondary range-xs"
                 id="denoiseRadius"
               />
@@ -339,7 +372,7 @@ export default function BimModel() {
                 min={0}
                 max="16"
                 step={1}
-                defaultValue="0"
+                defaultValue="4"
                 className="range w-7/12  range-secondary range-xs"
                 id="distanceFalloff"
               />
@@ -351,7 +384,7 @@ export default function BimModel() {
                 min={0}
                 max="16"
                 step={1}
-                defaultValue="0"
+                defaultValue="9"
                 className="range w-7/12  range-secondary range-xs"
                 id="intensity"
               />
@@ -420,8 +453,11 @@ export default function BimModel() {
   const measurements = components.get(OBC.MeasurementUtils)
   const shadows = components.get(OBCF.ShadowDropper)
   const area = components.get(OBCF.AreaMeasurement)
+  const edge = components.get(OBCF.EdgeMeasurement)
+  const face = components.get(OBCF.FaceMeasurement)
   const angles = components.get(OBCF.AngleMeasurement)
   const grids = components.get(OBC.Grids)
+  const highlighter = components.get(OBCF.Highlighter)
 
   async function loadWorld() {
     if (world.renderer == null) {
@@ -442,8 +478,10 @@ export default function BimModel() {
 
       world.scene.three.background = new THREE.Color(0xf1f1f1)
       world.camera.controls.distance = 70
+
+      world.camera.controls.setLookAt(0, 1, 15, 0, 0, -10, true)
+      world.camera.controls.maxPolarAngle = 1.55
       const grid = grids.create(world)
-      // grid.config.color.setHex(0xdddddd)
 
       await fragmentIfcLoader.setup()
       const excludedCats = [
@@ -467,6 +505,7 @@ export default function BimModel() {
       model.traverse((obj) => (obj.frustumCulled = false))
       world.scene.three.add(model)
       world.meshes.add(model)
+      // raycaster
 
       const caster = casters.get(world)
 
@@ -485,6 +524,33 @@ export default function BimModel() {
       postproduction.customEffects.excludedMeshes.push(grid.three)
       const ao = postproduction.n8ao.configuration
 
+      // highlight
+      // highlighter.setup({ world })
+      // highlighter.zoomToSelection = true
+      // highlighter.multiple = 'shiftKey'
+      // const outliner = components.get(OBCF.Outliner)
+      // outliner.world = world
+      // outliner.enabled = true
+
+      // outliner.create(
+      //   'example',
+      //   new THREE.MeshBasicMaterial({
+      //     color: 0x367bfb,
+      //     transparent: true,
+      //     opacity: 0.5,
+      //   })
+      // )
+
+      // highlighter.events.select.onHighlight.add((data) => {
+      //   outliner.clear('example')
+      //   outliner.add('example', data)
+      // })
+
+      // highlighter.events.select.onClear.add(() => {
+      //   outliner.clear('example')
+      // })
+
+      // Light control
       postproduction.setPasses({ gamma: false, custom: false, ao: false })
       postproduction.customEffects.glossEnabled = false
       postproduction.customEffects.opacity = 0
@@ -495,11 +561,11 @@ export default function BimModel() {
       ao.halfRes = false
       ao.screenSpaceRadius = false
       ao.aoSamples = 1
-      ao.denoiseSamples = 1
-      ao.denoiseRadius = 0
-      ao.aoRadius = 0
-      ao.distanceFalloff = 0
-      ao.intensity = 0
+      ao.denoiseSamples = 7
+      ao.denoiseRadius = 30
+      ao.aoRadius = 9
+      ao.distanceFalloff = 4
+      ao.intensity = 9
 
       // light controll
       document
@@ -584,13 +650,48 @@ export default function BimModel() {
         container.ondblclick = () => angles.create()
         container.oncontextmenu = () => angles.endCreation()
       })
+      document.getElementById('edge').addEventListener('click', () => {
+        edge.world = world
+        edge.enabled = true
+        container.ondblclick = () => edge.create()
+      })
+      let saved = []
+      document.getElementById('face').addEventListener('click', () => {
+        face.world = world
+        face.enabled = true
+        container.ondblclick = () => face.create()
+      })
+      window.addEventListener('keydown', (event) => {
+        if (event.code === 'KeyO') {
+          edge.delete()
+          face.delete()
+        } else if (event.code === 'KeyS') {
+          savedEdge = edge.get()
+          edge.deleteAll()
+          savedFace = face.get()
+          face.deleteAll()
+        } else if (event.code === 'KeyL') {
+          if (savedEdge) {
+            edge.set(savedEdge)
+          }
+          if (savedFace) {
+            face.set(savedFace)
+          }
+        }
+      })
       let deleteMeasurement = document
         .getElementById('deleteMeasurement')
         .addEventListener('click', () => {
+          const radio = document.querySelectorAll('.radioMeasurement')
+          for (let i = 0; i < radio.length; i++) radio[i].checked = false
+          edge.deleteAll()
           angles.deleteAll()
           area.deleteAll()
+          face.deleteAll()
           if (area.enabled) area.enabled = false
           if (angles.enabled) angles.enabled = false
+          if (edge.enabled) edge.enabled = false
+          if (face.enabled) face.enabled = false
         })
 
       // fit screen
@@ -645,6 +746,10 @@ export default function BimModel() {
         })
       })
 
+      document.getElementById('btn-10').addEventListener('click', () => {
+        world.camera.controls.setLookAt(0, 1, 15, 0, 0, -10, true)
+        world.camera.controls.maxPolarAngle = 1.55
+      })
       // world.camera.controls.addEventListener(
       //   'control',
       //   (e) => console.log(world.camera.controls.getPosition())
