@@ -28,6 +28,7 @@ import { ArrowTurnDownRightIcon } from '@heroicons/react/24/solid'
 export default function BimModel() {
   const [btnActive, setBtnActive] = useState(1)
   const [isClipper, setIsClipper] = useState(false)
+  const [freeOrbit, setFreeOrbit] = useState(0)
   const [measurementType, setMeasurementType] = useState('')
 
   const btnList = [
@@ -36,7 +37,7 @@ export default function BimModel() {
       title: 'Models',
       tooltip: 'Models (Shift + m)',
       icon: <CubeIcon className="size-5" />,
-      class: 'modal btnList',
+      class: 'modal',
       child: <></>,
     },
     {
@@ -44,7 +45,7 @@ export default function BimModel() {
       title: 'Scene explorer',
       tooltip: 'Scene explorer (Shift + e)',
       icon: <ShareIcon className="size-5" />,
-      class: 'modal btnList',
+      class: 'modal',
       child: <></>,
     },
     {
@@ -52,7 +53,7 @@ export default function BimModel() {
       title: 'Discussions',
       tooltip: 'Discussions (Shift + t)',
       icon: <ChatBubbleBottomCenterTextIcon className="size-5" />,
-      class: 'modal btnList',
+      class: 'modal',
       child: <></>,
     },
     {
@@ -60,7 +61,7 @@ export default function BimModel() {
       title: 'Measure mode',
       tooltip: 'Measure mode (Shift + r)',
       icon: <PencilIcon className="size-5" />,
-      class: 'modal btnList',
+      class: 'modal',
       child: (
         <div className="flex flex-col items-center">
           <div role="alert" className="alert p-1 rounded-md text-sm ">
@@ -163,7 +164,7 @@ export default function BimModel() {
       title: 'Views',
       tooltip: 'Views',
       icon: <SparklesIcon className="size-5" />,
-      class: 'dropdown btnList',
+      class: 'dropdown',
       child: (
         <ul
           tabIndex={0}
@@ -192,14 +193,14 @@ export default function BimModel() {
       title: 'Fit to screen',
       tooltip: 'Fit to screen',
       icon: <ArrowsPointingOutIcon className="size-5" />,
-      class: 'btn btnList',
+      class: 'btn',
     },
     {
       id: 7,
       title: 'Light controls',
       tooltip: 'Light controls',
       icon: <SunIcon className="size-5" />,
-      class: 'modal btnList',
+      class: 'modal',
       child: (
         <div className="h-96 overflow-x-hidden overflow-y-auto pr-4">
           <div className="form-control w-full border-y py-2">
@@ -399,7 +400,7 @@ export default function BimModel() {
       title: 'Section box',
       tooltip: 'Section box',
       icon: <ScissorsIcon className="size-5" />,
-      class: 'modal btnList',
+      class: 'modal',
       child: (
         <div className="text-start">
           <h6>Double click : Create clipping plane</h6>
@@ -412,7 +413,7 @@ export default function BimModel() {
       title: 'Explode',
       tooltip: 'Explode (Ongoing Feature)',
       icon: <PuzzlePieceIcon className="size-5" />,
-      class: 'dropdown btnList',
+      class: 'dropdown',
       child: (
         <ul
           tabIndex={0}
@@ -438,7 +439,7 @@ export default function BimModel() {
       title: 'Free orbit',
       tooltip: 'Free orbit',
       icon: <ArrowPathRoundedSquareIcon className="size-5" />,
-      class: 'btn btnList',
+      class: 'btn',
     },
   ]
 
@@ -750,16 +751,13 @@ export default function BimModel() {
 
       let isFreeOrbit = false
       document.getElementById('btn-10').addEventListener('click', () => {
-        console.log(isFreeOrbit)
         if (isFreeOrbit) {
           isFreeOrbit = false
-          console.log(true)
           world.camera.controls.setLookAt(0, 1, 15, 0, 0, -10, true)
           world.camera.controls.maxPolarAngle = 1.55
         } else {
           isFreeOrbit = true
           world.camera.controls.maxPolarAngle = Math.PI
-          console.log(false)
         }
       })
       // world.camera.controls.addEventListener(
@@ -799,23 +797,23 @@ export default function BimModel() {
       <div className="min-w-min absolute top-4 left-4 flex gap-4">
         <div className="flex flex-col gap-2" id="btn-container">
           {btnList.map((btn, index) => {
-            if (btn.class != 'dropdown') {
+            if (btn.class === 'btn') {
               return (
                 <button
                   key={index}
-                  className={`tooltip w-10 h-10 flex items-center justify-center rounded-xl border z-20 tooltip-right transition ease-in-out duration-500 hover:translate-x-1 ${
-                    btnActive == btn.id
-                      ? 'bg-secondary text-white'
-                      : 'bg-white text-slate-800'
+                  className={`tooltip w-10 h-10 flex items-center justify-center rounded-xl border z-20 tooltip-right transition ease-in-out duration-500 hover:translate-x-1 bg-white ${
+                    freeOrbit == btn.id ? 'text-secondary' : ''
                   }`}
                   data-tip={btn.tooltip}
-                  onClick={() => setBtnActive(btn.id)}
+                  onClick={() =>
+                    freeOrbit == btn.id ? setFreeOrbit(0) : setFreeOrbit(btn.id)
+                  }
                   id={`btn-${btn.id}`}
                 >
                   {btn.icon}
                 </button>
               )
-            } else {
+            } else if (btn.class === 'dropdown') {
               return (
                 <div className="dropdown dropdown-right">
                   <button
@@ -832,9 +830,24 @@ export default function BimModel() {
                   >
                     {btn.icon}
                   </button>
-
                   {btn.child}
                 </div>
+              )
+            } else {
+              return (
+                <button
+                  key={index}
+                  className={`tooltip w-10 h-10 flex items-center justify-center rounded-xl border z-20 tooltip-right transition ease-in-out duration-500 hover:translate-x-1 ${
+                    btnActive == btn.id
+                      ? 'bg-secondary text-white'
+                      : 'bg-white text-slate-800'
+                  }`}
+                  data-tip={btn.tooltip}
+                  onClick={() => setBtnActive(btn.id)}
+                  id={`btn-${btn.id}`}
+                >
+                  {btn.icon}
+                </button>
               )
             }
           })}
