@@ -36,7 +36,7 @@ export default function BimModel() {
       title: 'Models',
       tooltip: 'Models (Shift + m)',
       icon: <CubeIcon className="size-5" />,
-      class: 'modal',
+      class: 'modal btnList',
       child: <></>,
     },
     {
@@ -44,7 +44,7 @@ export default function BimModel() {
       title: 'Scene explorer',
       tooltip: 'Scene explorer (Shift + e)',
       icon: <ShareIcon className="size-5" />,
-      class: 'modal',
+      class: 'modal btnList',
       child: <></>,
     },
     {
@@ -52,7 +52,7 @@ export default function BimModel() {
       title: 'Discussions',
       tooltip: 'Discussions (Shift + t)',
       icon: <ChatBubbleBottomCenterTextIcon className="size-5" />,
-      class: 'modal',
+      class: 'modal btnList',
       child: <></>,
     },
     {
@@ -60,7 +60,7 @@ export default function BimModel() {
       title: 'Measure mode',
       tooltip: 'Measure mode (Shift + r)',
       icon: <PencilIcon className="size-5" />,
-      class: 'modal',
+      class: 'modal btnList',
       child: (
         <div className="flex flex-col items-center">
           <div role="alert" className="alert p-1 rounded-md text-sm ">
@@ -163,7 +163,7 @@ export default function BimModel() {
       title: 'Views',
       tooltip: 'Views',
       icon: <SparklesIcon className="size-5" />,
-      class: 'dropdown',
+      class: 'dropdown btnList',
       child: (
         <ul
           tabIndex={0}
@@ -192,14 +192,14 @@ export default function BimModel() {
       title: 'Fit to screen',
       tooltip: 'Fit to screen',
       icon: <ArrowsPointingOutIcon className="size-5" />,
-      class: 'btn',
+      class: 'btn btnList',
     },
     {
       id: 7,
       title: 'Light controls',
       tooltip: 'Light controls',
       icon: <SunIcon className="size-5" />,
-      class: 'modal',
+      class: 'modal btnList',
       child: (
         <div className="h-96 overflow-x-hidden overflow-y-auto pr-4">
           <div className="form-control w-full border-y py-2">
@@ -399,7 +399,7 @@ export default function BimModel() {
       title: 'Section box',
       tooltip: 'Section box',
       icon: <ScissorsIcon className="size-5" />,
-      class: 'modal',
+      class: 'modal btnList',
       child: (
         <div className="text-start">
           <h6>Double click : Create clipping plane</h6>
@@ -412,7 +412,7 @@ export default function BimModel() {
       title: 'Explode',
       tooltip: 'Explode (Ongoing Feature)',
       icon: <PuzzlePieceIcon className="size-5" />,
-      class: 'dropdown',
+      class: 'dropdown btnList',
       child: (
         <ul
           tabIndex={0}
@@ -438,7 +438,7 @@ export default function BimModel() {
       title: 'Free orbit',
       tooltip: 'Free orbit',
       icon: <ArrowPathRoundedSquareIcon className="size-5" />,
-      class: 'btn',
+      class: 'btn btnList',
     },
   ]
 
@@ -464,8 +464,6 @@ export default function BimModel() {
       const container = document.getElementById('bim-model-canvas')
       world.scene = new OBC.SimpleScene(components)
 
-      // render for shadow
-      // world.renderer = new OBCF.RendererWith2D(components, container)
       world.renderer = new OBCF.PostproductionRenderer(components, container)
 
       world.camera = new OBC.OrthoPerspectiveCamera(components)
@@ -480,6 +478,7 @@ export default function BimModel() {
       world.camera.controls.distance = 70
 
       world.camera.controls.setLookAt(0, 1, 15, 0, 0, -10, true)
+
       world.camera.controls.maxPolarAngle = 1.55
       const grid = grids.create(world)
 
@@ -509,7 +508,6 @@ export default function BimModel() {
 
       const caster = casters.get(world)
 
-      clipper.enabled = true
       world.camera.controls.dollyTo(25, true)
 
       // apply shadow
@@ -679,20 +677,22 @@ export default function BimModel() {
           }
         }
       })
+
+      function delMeas() {
+        const radio = document.querySelectorAll('.radioMeasurement')
+        for (let i = 0; i < radio.length; i++) radio[i].checked = false
+        edge.deleteAll()
+        angles.deleteAll()
+        area.deleteAll()
+        face.deleteAll()
+        if (area.enabled) area.enabled = false
+        if (angles.enabled) angles.enabled = false
+        if (edge.enabled) edge.enabled = false
+        if (face.enabled) face.enabled = false
+      }
       let deleteMeasurement = document
         .getElementById('deleteMeasurement')
-        .addEventListener('click', () => {
-          const radio = document.querySelectorAll('.radioMeasurement')
-          for (let i = 0; i < radio.length; i++) radio[i].checked = false
-          edge.deleteAll()
-          angles.deleteAll()
-          area.deleteAll()
-          face.deleteAll()
-          if (area.enabled) area.enabled = false
-          if (angles.enabled) angles.enabled = false
-          if (edge.enabled) edge.enabled = false
-          if (face.enabled) face.enabled = false
-        })
+        .addEventListener('click', delMeas())
 
       // fit screen
       let fitScreen = document
@@ -705,6 +705,7 @@ export default function BimModel() {
       let SectionBox = document
         .getElementById('btn-8')
         .addEventListener('click', () => {
+          clipper.enabled = true
           container.ondblclick = () => {
             if (clipper.enabled) {
               clipper.create(world)
@@ -721,6 +722,7 @@ export default function BimModel() {
           if (clipper.enabled) {
             clipper.deleteAll()
             setIsClipper(false)
+            clipper.enabled = false
           }
         })
 
@@ -746,9 +748,19 @@ export default function BimModel() {
         })
       })
 
+      let isFreeOrbit = false
       document.getElementById('btn-10').addEventListener('click', () => {
-        world.camera.controls.setLookAt(0, 1, 15, 0, 0, -10, true)
-        world.camera.controls.maxPolarAngle = 1.55
+        console.log(isFreeOrbit)
+        if (isFreeOrbit) {
+          isFreeOrbit = false
+          console.log(true)
+          world.camera.controls.setLookAt(0, 1, 15, 0, 0, -10, true)
+          world.camera.controls.maxPolarAngle = 1.55
+        } else {
+          isFreeOrbit = true
+          world.camera.controls.maxPolarAngle = Math.PI
+          console.log(false)
+        }
       })
       // world.camera.controls.addEventListener(
       //   'control',
