@@ -14,6 +14,7 @@
     "@thatopen/components": "^2.3.8",
     "@thatopen/components-front": "^2.3.10",
     "@thatopen/ui": "^2.3.0",
+    "@thatopen/ui-obc": "^2.3.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0"

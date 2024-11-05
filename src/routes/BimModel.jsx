@@ -10,9 +10,11 @@ import {
   PuzzlePieceIcon,
   ScissorsIcon,
   ArrowPathRoundedSquareIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline'
 import ThatOpen from '../components/ThatOpen'
 import Stats from 'three/examples/jsm/libs/stats.module'
+import * as CUI from '@thatopen/ui-obc'
 import * as BUI from '@thatopen/ui'
 import * as OBC from '@thatopen/components'
 import * as WEBIFC from 'web-ifc'
@@ -39,7 +41,24 @@ export default function BimModel() {
       tooltip: 'Models (Shift + m)',
       icon: <CubeIcon className="size-5" />,
       class: 'modal',
-      child: <></>,
+      child: (
+        <>
+          <button className="rounded-lg border absolute top-0 right-0 w-7 h-7 flex items-center justify-center w-fit bg-secondary text-white">
+            <PlusIcon className="size-4" />
+          </button>
+          <div className="flex gap-4 border-t p-2">
+            <div className="avatar">
+              <div className="mask mask-hexagon w-8">
+                <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+              </div>
+            </div>
+            <h6 className="flex flex-col text-start text-base font-medium">
+              Dekson Door Handle
+              <span className="text-sm font-normal">Latest version</span>
+            </h6>
+          </div>
+        </>
+      ),
     },
     {
       id: 2,
@@ -445,7 +464,7 @@ export default function BimModel() {
   const components = new OBC.Components()
   const worlds = components.get(OBC.Worlds)
 
-  const fragments = components.get(OBC.FragmentsManager)
+  const fragmentsManager = components.get(OBC.FragmentsManager)
   const fragmentIfcLoader = components.get(OBC.IfcLoader)
   const world = worlds.create()
   const casters = components.get(OBC.Raycasters)
@@ -458,9 +477,11 @@ export default function BimModel() {
   const angles = components.get(OBCF.AngleMeasurement)
   const grids = components.get(OBC.Grids)
   const highlighter = components.get(OBCF.Highlighter)
+  const indexer = components.get(OBC.IfcRelationsIndexer)
 
   async function loadWorld() {
     if (world.renderer == null) {
+      // UIManager.init()
       const container = document.getElementById('bim-model-canvas')
       world.scene = new OBC.SimpleScene(components)
 
@@ -483,6 +504,7 @@ export default function BimModel() {
       const grid = grids.create(world)
 
       await fragmentIfcLoader.setup()
+
       const excludedCats = [
         WEBIFC.IFCTENDONANCHOR,
         WEBIFC.IFCREINFORCINGBAR,
@@ -501,14 +523,55 @@ export default function BimModel() {
       const buffer = new Uint8Array(data)
       const model = await fragmentIfcLoader.load(buffer)
       model.name = 'example'
-      model.traverse((obj) => (obj.frustumCulled = false))
+      model.traverse((obj) => {
+        obj.frustumCulled = false
+      })
       world.scene.three.add(model)
       world.meshes.add(model)
-      // raycaster
-
-      const caster = casters.get(world)
-
+      await indexer.process(model)
+      const allRelationsJSON = indexer.serializeAllRelations()
       world.camera.controls.dollyTo(25, true)
+
+      const classifier = components.get(OBC.Classifier)
+
+      document.getElementById('btn-2').addEventListener('click', async () => {
+        const psets = indexer.getEntityRelations(model, 6518, 'IsDefinedBy')
+        if (psets) {
+          for (const expressID of psets) {
+            // You can get the pset attributes like this
+            const pset = await model.getProperties(expressID)
+            // console.log(pset)
+            // You can get the pset props like this or iterate over pset.HasProperties yourself
+            await OBC.IfcPropertiesUtils.getPsetProps(
+              model,
+              expressID,
+              async (propExpressID) => {
+                const prop = await model.getProperties(propExpressID)
+                // console.log(prop)
+              }
+            )
+          }
+        }
+        // console.log(psets)
+        const [classificationsTree, updateClassificationsTree] =
+          CUI.tables.classificationTree({
+            components,
+            classifications: [],
+          })
+        fragmentIfcLoader.onIfcStartedLoading.add(async () => {
+          classifier.byEntity(psets)
+          classifier.byPredefinedType(psets)
+          const classifications = [
+            { system: 'entities', label: 'Entities' },
+            { system: 'predefinedTypes', label: 'Predefined Types' },
+          ]
+          updateClassificationsTree({ classifications })
+        })
+        console.log(classificationsTree)
+      })
+
+      // raycaster
+      // const caster = casters.get(world)
 
       // apply shadow
       shadows.shadowExtraScaleFactor = 3
@@ -710,7 +773,7 @@ export default function BimModel() {
             if (clipper.enabled) {
               clipper.create(world)
               clipper.config.size = 5
-              clipper.config.color = new THREE.Color(0x65cc8a)
+              clipper.config.color = new THREE.Color(0xbe1111)
               setIsClipper(true)
             }
           }
@@ -722,6 +785,7 @@ export default function BimModel() {
           if (clipper.enabled) {
             clipper.deleteAll()
             setIsClipper(false)
+            setBtnActive(0)
             clipper.enabled = false
           }
         })
@@ -801,21 +865,15 @@ export default function BimModel() {
                 <button
                   key={index}
                   className={`tooltip w-10 h-10 flex items-center justify-center rounded-xl border z-20 tooltip-right transition ease-in-out duration-500 hover:translate-x-1 bg-white ${
-                    btn.id == 6
-                      ? fitScreen == btn.id
+                    btn.id == 10
+                      ? freeOrbit == btn.id
                         ? 'text-secondary'
                         : ''
-                      : freeOrbit == btn.id
-                      ? 'text-secondary'
-                      : ''
+                      : 'focus:text-secondary text-slate-900'
                   }`}
                   data-tip={btn.tooltip}
                   onClick={() => {
-                    if (btn.id == 6) {
-                      fitScreen == btn.id
-                        ? setFitScreen(0)
-                        : setFitScreen(btn.id)
-                    } else {
+                    if (btn.id == 10) {
                       freeOrbit == btn.id
                         ? setFreeOrbit(0)
                         : setFreeOrbit(btn.id)
@@ -879,7 +937,7 @@ export default function BimModel() {
               }`}
               key={index}
             >
-              <div className="card-body p-0">
+              <div className="card-body p-0 relative">
                 <h2 className="card-title text-lg">{btn.title}</h2>
                 {btn.child}
               </div>
