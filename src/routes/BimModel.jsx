@@ -29,6 +29,7 @@ export default function BimModel() {
   const [btnActive, setBtnActive] = useState(1)
   const [isClipper, setIsClipper] = useState(false)
   const [freeOrbit, setFreeOrbit] = useState(0)
+  const [fitScreen, setFitScreen] = useState(0)
   const [measurementType, setMeasurementType] = useState('')
 
   const btnList = [
@@ -88,7 +89,6 @@ export default function BimModel() {
                   type="radio"
                   name="radio-10"
                   className="radio radioMeasurement checked:bg-blue-500 radio-sm"
-                  // defaultChecked={measurementType === 'area' ? true : false}
                   id="area"
                 />
                 <h6 className="label-text flex flex-col items-start">
@@ -104,7 +104,6 @@ export default function BimModel() {
                 <input
                   type="radio"
                   name="radio-10"
-                  // defaultChecked={measurementType === 'angle' ? true : false}
                   className="radio radioMeasurement checked:bg-blue-500 radio-sm"
                   id="angle"
                 />
@@ -802,12 +801,26 @@ export default function BimModel() {
                 <button
                   key={index}
                   className={`tooltip w-10 h-10 flex items-center justify-center rounded-xl border z-20 tooltip-right transition ease-in-out duration-500 hover:translate-x-1 bg-white ${
-                    freeOrbit == btn.id ? 'text-secondary' : ''
+                    btn.id == 6
+                      ? fitScreen == btn.id
+                        ? 'text-secondary'
+                        : ''
+                      : freeOrbit == btn.id
+                      ? 'text-secondary'
+                      : ''
                   }`}
                   data-tip={btn.tooltip}
-                  onClick={() =>
-                    freeOrbit == btn.id ? setFreeOrbit(0) : setFreeOrbit(btn.id)
-                  }
+                  onClick={() => {
+                    if (btn.id == 6) {
+                      fitScreen == btn.id
+                        ? setFitScreen(0)
+                        : setFitScreen(btn.id)
+                    } else {
+                      freeOrbit == btn.id
+                        ? setFreeOrbit(0)
+                        : setFreeOrbit(btn.id)
+                    }
+                  }}
                   id={`btn-${btn.id}`}
                 >
                   {btn.icon}
