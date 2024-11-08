@@ -11,6 +11,7 @@ import {
   ScissorsIcon,
   ArrowPathRoundedSquareIcon,
   PlusIcon,
+  BarsArrowDownIcon,
 } from '@heroicons/react/24/outline'
 import ThatOpen from '../components/ThatOpen'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -66,7 +67,43 @@ export default function BimModel() {
       tooltip: 'Scene explorer (Shift + e)',
       icon: <ShareIcon className="size-5" />,
       class: 'modal',
-      child: <></>,
+      child: (
+        <div className="flex flex-col gap-4">
+          <div className="flex w-full gap-2">
+            <label className="input input-bordered input-sm flex items-center gap-2 w-full">
+              <input
+                type="text"
+                className="grow"
+                placeholder="Search"
+                id="sceneSearch"
+              />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="h-4 w-4 opacity-70"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </label>
+            <button
+              className="tooltip rounded-lg bg-secondary text-white border flex items-center justify-center btn-sm"
+              data-tip="Expand/Collapse"
+              id="btnExcol"
+            >
+              <BarsArrowDownIcon className="size-5" />
+            </button>
+          </div>
+          <div
+            id="scene-content"
+            className="col-span-5 max-h-96 overflow-y-auto"
+          ></div>
+        </div>
+      ),
     },
     {
       id: 3,
@@ -481,7 +518,6 @@ export default function BimModel() {
 
   async function loadWorld() {
     if (world.renderer == null) {
-      // UIManager.init()
       const container = document.getElementById('bim-model-canvas')
       world.scene = new OBC.SimpleScene(components)
 
@@ -502,6 +538,7 @@ export default function BimModel() {
 
       world.camera.controls.maxPolarAngle = 1.55
       const grid = grids.create(world)
+      grid.config.visible = false
 
       await fragmentIfcLoader.setup()
 
@@ -516,100 +553,99 @@ export default function BimModel() {
       }
       fragmentIfcLoader.settings.webIfc.COORDINATE_TO_ORIGIN = true
 
-      const file = await fetch(
-        'https://thatopen.github.io/engine_components/resources/small.ifc'
-      )
-      const data = await file.arrayBuffer()
-      const buffer = new Uint8Array(data)
-      const model = await fragmentIfcLoader.load(buffer)
-      model.name = 'example'
-      model.traverse((obj) => {
-        obj.frustumCulled = false
-      })
-      world.scene.three.add(model)
-      world.meshes.add(model)
-      await indexer.process(model)
-      const allRelationsJSON = indexer.serializeAllRelations()
-      world.camera.controls.dollyTo(25, true)
-
-      const classifier = components.get(OBC.Classifier)
-
-      document.getElementById('btn-2').addEventListener('click', async () => {
-        const psets = indexer.getEntityRelations(model, 6518, 'IsDefinedBy')
-        if (psets) {
-          for (const expressID of psets) {
-            // You can get the pset attributes like this
-            const pset = await model.getProperties(expressID)
-            // console.log(pset)
-            // You can get the pset props like this or iterate over pset.HasProperties yourself
-            await OBC.IfcPropertiesUtils.getPsetProps(
-              model,
-              expressID,
-              async (propExpressID) => {
-                const prop = await model.getProperties(propExpressID)
-                // console.log(prop)
-              }
-            )
-          }
-        }
-        // console.log(psets)
-        const [classificationsTree, updateClassificationsTree] =
-          CUI.tables.classificationTree({
-            components,
-            classifications: [],
-          })
-        fragmentIfcLoader.onIfcStartedLoading.add(async () => {
-          classifier.byEntity(psets)
-          classifier.byPredefinedType(psets)
-          const classifications = [
-            { system: 'entities', label: 'Entities' },
-            { system: 'predefinedTypes', label: 'Predefined Types' },
-          ]
-          updateClassificationsTree({ classifications })
+      let model = null
+      setTimeout(async () => {
+        const file = await fetch(
+          'https://thatopen.github.io/engine_components/resources/small.ifc'
+        )
+        const data = await file.arrayBuffer()
+        const buffer = new Uint8Array(data)
+        model = await fragmentIfcLoader.load(buffer)
+        model.name = 'Small Ifc'
+        model.traverse((obj) => {
+          obj.frustumCulled = false
         })
-        console.log(classificationsTree)
+        world.scene.three.add(model)
+        world.meshes.add(model)
+        world.camera.controls.dollyTo(25, true)
+      }, 1000)
+
+      highlighter.setup({ world })
+
+      const [propertiesTable, updatePropertiesTable] =
+        CUI.tables.elementProperties({
+          components,
+          fragmentIdMap: {},
+        })
+
+      propertiesTable.preserveStructureOnFilter = true
+      propertiesTable.indentationInText = false
+
+      fragmentsManager.onFragmentsLoaded.add(async (model) => {
+        if (model.hasProperties) await indexer.process(model)
+        document.getElementById('btn-2').addEventListener('click', async () => {
+          BUI.Manager.init()
+
+          // highlight
+          highlighter.enabled = true
+          highlighter.zoomToSelection = true
+          highlighter.multiple = 'shiftKey'
+
+          highlighter.events.select.onHighlight.add((fragmentIdMap) => {
+            updatePropertiesTable({ fragmentIdMap })
+          })
+
+          highlighter.events.select.onClear.add(() =>
+            updatePropertiesTable({ fragmentIdMap: {} })
+          )
+
+          const expandTable = (e) => {
+            const button = e.target
+            propertiesTable.expanded = !propertiesTable.expanded
+            button.label = propertiesTable.expanded ? 'Collapse' : 'Expand'
+          }
+          const onTextInput = (e) => {
+            const input = e.target
+            propertiesTable.queryString =
+              input.value !== '' ? input.value : null
+          }
+
+          const btnExpand = document.getElementById('btnExcol')
+          btnExpand.addEventListener('click', expandTable)
+          const sceneSearch = document.getElementById('sceneSearch')
+          sceneSearch.addEventListener('keypress', onTextInput)
+
+          const propertiesPanel = BUI.Component.create(() => {
+            return BUI.html`
+          <bim-panel style="grid-area: viewport; width: 100%; background: transparent">
+              ${propertiesTable}
+          </bim-panel>
+        `
+          })
+
+          const mainLayout = document.getElementById('scene-content')
+          mainLayout.appendChild(propertiesPanel)
+        })
+      })
+
+      btnList.map((item) => {
+        document.getElementById()
       })
 
       // raycaster
       // const caster = casters.get(world)
 
       // apply shadow
-      shadows.shadowExtraScaleFactor = 3
-      shadows.shadowOffset = 0.1
-      const shadowID = world.uuid
-      shadows.create([model], shadowID, world)
+      // shadows.shadowExtraScaleFactor = 3
+      // shadows.shadowOffset = 0.1
+      // const shadowID = world.uuid
+      // shadows.create([model], shadowID, world)
 
       // apply postproduction render
       const { postproduction } = world.renderer
       postproduction.enabled = true
       postproduction.customEffects.excludedMeshes.push(grid.three)
       const ao = postproduction.n8ao.configuration
-
-      // highlight
-      // highlighter.setup({ world })
-      // highlighter.zoomToSelection = true
-      // highlighter.multiple = 'shiftKey'
-      // const outliner = components.get(OBCF.Outliner)
-      // outliner.world = world
-      // outliner.enabled = true
-
-      // outliner.create(
-      //   'example',
-      //   new THREE.MeshBasicMaterial({
-      //     color: 0x367bfb,
-      //     transparent: true,
-      //     opacity: 0.5,
-      //   })
-      // )
-
-      // highlighter.events.select.onHighlight.add((data) => {
-      //   outliner.clear('example')
-      //   outliner.add('example', data)
-      // })
-
-      // highlighter.events.select.onClear.add(() => {
-      //   outliner.clear('example')
-      // })
 
       // Light control
       postproduction.setPasses({ gamma: false, custom: false, ao: false })
@@ -722,24 +758,6 @@ export default function BimModel() {
         face.enabled = true
         container.ondblclick = () => face.create()
       })
-      window.addEventListener('keydown', (event) => {
-        if (event.code === 'KeyO') {
-          edge.delete()
-          face.delete()
-        } else if (event.code === 'KeyS') {
-          savedEdge = edge.get()
-          edge.deleteAll()
-          savedFace = face.get()
-          face.deleteAll()
-        } else if (event.code === 'KeyL') {
-          if (savedEdge) {
-            edge.set(savedEdge)
-          }
-          if (savedFace) {
-            face.set(savedFace)
-          }
-        }
-      })
 
       function delMeas() {
         const radio = document.querySelectorAll('.radioMeasurement')
@@ -768,6 +786,7 @@ export default function BimModel() {
       let SectionBox = document
         .getElementById('btn-8')
         .addEventListener('click', () => {
+          highlighter.enabled = false
           clipper.enabled = true
           container.ondblclick = () => {
             if (clipper.enabled) {
@@ -823,11 +842,6 @@ export default function BimModel() {
           world.camera.controls.maxPolarAngle = Math.PI
         }
       })
-      // world.camera.controls.addEventListener(
-      //   'control',
-      //   (e) => console.log(world.camera.controls.getPosition())
-      // console.log(world.camera.controls.getTarget())
-      // )
     }
   }
 
@@ -945,10 +959,7 @@ export default function BimModel() {
           ))}
         </div>
       </div>
-      <div
-        className="w-full h-[90vh] overflow-hidden"
-        id="bim-model-canvas"
-      ></div>
+      <div className="h-[90vh] overflow-hidden" id="bim-model-canvas"></div>
       <button
         className={`btn btn-primary text-white absolute bottom-10 left-1/2 -translate-x-1/2 py-2 ${
           isClipper ? 'visible' : 'invisible'
