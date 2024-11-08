@@ -570,7 +570,11 @@ export default function BimModel() {
         world.camera.controls.dollyTo(25, true)
       }, 1000)
 
+      // highlight
       highlighter.setup({ world })
+      highlighter.enabled = true
+      highlighter.zoomToSelection = true
+      highlighter.multiple = 'shiftKey'
 
       const [propertiesTable, updatePropertiesTable] =
         CUI.tables.elementProperties({
@@ -585,11 +589,6 @@ export default function BimModel() {
         if (model.hasProperties) await indexer.process(model)
         document.getElementById('btn-2').addEventListener('click', async () => {
           BUI.Manager.init()
-
-          // highlight
-          highlighter.enabled = true
-          highlighter.zoomToSelection = true
-          highlighter.multiple = 'shiftKey'
 
           highlighter.events.select.onHighlight.add((fragmentIdMap) => {
             updatePropertiesTable({ fragmentIdMap })
@@ -626,10 +625,6 @@ export default function BimModel() {
           const mainLayout = document.getElementById('scene-content')
           mainLayout.appendChild(propertiesPanel)
         })
-      })
-
-      btnList.map((item) => {
-        document.getElementById()
       })
 
       // raycaster
@@ -752,7 +747,6 @@ export default function BimModel() {
         edge.enabled = true
         container.ondblclick = () => edge.create()
       })
-      let saved = []
       document.getElementById('face').addEventListener('click', () => {
         face.world = world
         face.enabled = true
