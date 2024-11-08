@@ -75,7 +75,7 @@ export default function BimModel() {
                 type="text"
                 className="grow"
                 placeholder="Search"
-                id="sceneSearch"
+                // id="sceneSearch"
               />
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -90,13 +90,6 @@ export default function BimModel() {
                 />
               </svg>
             </label>
-            <button
-              className="tooltip rounded-lg bg-secondary text-white border flex items-center justify-center btn-sm"
-              data-tip="Expand/Collapse"
-              id="btnExcol"
-            >
-              <BarsArrowDownIcon className="size-5" />
-            </button>
           </div>
           <div
             id="scene-content"
@@ -581,52 +574,145 @@ export default function BimModel() {
           components,
           fragmentIdMap: {},
         })
+      const [relationsTree] = CUI.tables.relationsTree({
+        components,
+        models: [],
+      })
+      const info = document.getElementById('info-container')
+      const element = document.getElementById('elementProp')
+      const entity = document.getElementById('entityProp')
+      const mainLayout = document.getElementById('scene-content')
+
+      relationsTree.preserveStructureOnFilter = true
 
       propertiesTable.preserveStructureOnFilter = true
       propertiesTable.indentationInText = false
-
+      propertiesTable.expanded = true
       fragmentsManager.onFragmentsLoaded.add(async (model) => {
         if (model.hasProperties) await indexer.process(model)
-        document.getElementById('btn-2').addEventListener('click', async () => {
-          BUI.Manager.init()
-
-          highlighter.events.select.onHighlight.add((fragmentIdMap) => {
-            updatePropertiesTable({ fragmentIdMap })
-          })
-
-          highlighter.events.select.onClear.add(() =>
-            updatePropertiesTable({ fragmentIdMap: {} })
-          )
-
-          const expandTable = (e) => {
-            const button = e.target
-            propertiesTable.expanded = !propertiesTable.expanded
-            button.label = propertiesTable.expanded ? 'Collapse' : 'Expand'
-          }
-          const onTextInput = (e) => {
-            const input = e.target
-            propertiesTable.queryString =
-              input.value !== '' ? input.value : null
-          }
-
-          const btnExpand = document.getElementById('btnExcol')
-          btnExpand.addEventListener('click', expandTable)
-          const sceneSearch = document.getElementById('sceneSearch')
-          sceneSearch.addEventListener('keypress', onTextInput)
-
-          const propertiesPanel = BUI.Component.create(() => {
-            return BUI.html`
-          <bim-panel style="grid-area: viewport; width: 100%; background: transparent">
-              ${propertiesTable}
-          </bim-panel>
-        `
-          })
-
-          const mainLayout = document.getElementById('scene-content')
-          mainLayout.appendChild(propertiesPanel)
-        })
       })
 
+      BUI.Manager.init()
+
+      const expandTable = (e) => {
+        const button = e.target
+        propertiesTable.expanded = !propertiesTable.expanded
+        button.label = propertiesTable.expanded ? 'Collapse' : 'Expand'
+      }
+      const onTextInput = (e) => {
+        const input = e.target
+        propertiesTable.queryString = input.value !== '' ? input.value : null
+      }
+
+      const btnExpand = document.getElementById('btnElementEx')
+      btnExpand.addEventListener('click', expandTable)
+
+      const propertiesPanel = BUI.Component.create(() => {
+        return BUI.html`
+        <bim-panel style="grid-area: viewport; width: 100%; background: transparent">
+            ${propertiesTable}
+        </bim-panel>
+      `
+      })
+
+      element.appendChild(propertiesPanel)
+
+      const tableDefinition = {
+        Entity: (entity) => {
+          let style = {}
+          if (entity === OBC.IfcCategoryMap[WEBIFC.IFCPROPERTYSET]) {
+            style = {
+              ...baseStyle,
+              backgroundColor: 'purple',
+              color: 'white',
+            }
+          }
+          if (String(entity).includes('IFCWALL')) {
+            style = {
+              ...baseStyle,
+              backgroundColor: 'green',
+              color: 'white',
+            }
+          }
+          return BUI.html`<bim-label style=${BUI.styleMap(
+            style
+          )}>${entity}</bim-label>`
+        },
+        PredefinedType: (type) => {
+          const colors = ['#1c8d83', '#3c1c8d', '#386c19', '#837c24']
+          const randomIndex = Math.floor(Math.random() * colors.length)
+          const backgroundColor = colors[randomIndex]
+          const style = { ...baseStyle, backgroundColor, color: 'white' }
+          return BUI.html`<bim-label style=${BUI.styleMap(
+            style
+          )}>${type}</bim-label>`
+        },
+        NominalValue: (value) => {
+          let style = {}
+          if (typeof value === 'boolean' && value === false) {
+            style = { ...baseStyle, backgroundColor: '#b13535', color: 'white' }
+          }
+          if (typeof value === 'boolean' && value === true) {
+            style = { ...baseStyle, backgroundColor: '#18882c', color: 'white' }
+          }
+          return BUI.html`<bim-label style=${BUI.styleMap(
+            style
+          )}>${value}</bim-label>`
+        },
+      }
+
+      const [attributesTable, updateAttributesTable] =
+        CUI.tables.entityAttributes({
+          components,
+          fragmentIdMap: {},
+          tableDefinition,
+          attributesToInclude: () => {
+            const attributes = [
+              'Name',
+              'ContainedInStructure',
+              'HasProperties',
+              'HasPropertySets',
+              (name) => name.includes('Value'),
+              (name) => name.startsWith('Material'),
+              (name) => name.startsWith('Relating'),
+              (name) => {
+                const ignore = ['IsGroupedBy', 'IsDecomposedBy']
+                return name.startsWith('Is') && !ignore.includes(name)
+              },
+            ]
+            return attributes
+          },
+        })
+
+      attributesTable.expanded = true
+      attributesTable.indentationInText = true
+      attributesTable.preserveStructureOnFilter = true
+
+      const entityAttributesPanel = BUI.Component.create(() => {
+        return BUI.html`
+          <bim-panel style="grid-area: viewport; width: 100%; background: transparent">
+            ${attributesTable}
+          </bim-panel>
+        `
+      })
+
+      highlighter.events.select.onHighlight.add((fragmentIdMap) => {
+        updatePropertiesTable({ fragmentIdMap })
+        updateAttributesTable({ fragmentIdMap })
+        if (info.classList.contains('translate-x-[100vw]')) {
+          info.classList.remove('translate-x-[100vw]')
+          info.classList.add('translate-x-0')
+        }
+      })
+
+      highlighter.events.select.onClear.add(() => {
+        updatePropertiesTable({ fragmentIdMap: {} })
+        updateAttributesTable({ fragmentIdMap: {} })
+        if (info.classList.contains('translate-x-0')) {
+          info.classList.remove('translate-x-0')
+          info.classList.add('translate-x-[100vw]')
+        }
+      })
       // raycaster
       // const caster = casters.get(world)
 
@@ -952,6 +1038,34 @@ export default function BimModel() {
             </div>
           ))}
         </div>
+      </div>
+      <div
+        className="w-80 max-h-[32rem] overflow-y-auto absolute top-4 right-4 rounded-lg bg-white p-4 translate-x-[100vw] transition ease-in-out delay-500 text-start shadow"
+        id="info-container"
+      >
+        <h3 className="font-bold text-lg">Selection Info</h3>
+        <h6 className="flex justify-between">
+          Entity Properties
+          <button
+            className="tooltip rounded bg-secondary text-white border flex items-center justify-center w-5 h-5"
+            data-tip="Expand/Collapse"
+            id="btnEntityEx"
+          >
+            <BarsArrowDownIcon className="size-3" />
+          </button>
+        </h6>
+        <div id="entityProp"></div>
+        <h6 className="flex justify-between">
+          Element Properties
+          <button
+            className="tooltip rounded bg-secondary text-white border flex items-center justify-center w-5 h-5"
+            data-tip="Expand/Collapse"
+            id="btnElementEx"
+          >
+            <BarsArrowDownIcon className="size-3" />
+          </button>
+        </h6>
+        <div id="elementProp"></div>
       </div>
       <div className="h-[90vh] overflow-hidden" id="bim-model-canvas"></div>
       <button
