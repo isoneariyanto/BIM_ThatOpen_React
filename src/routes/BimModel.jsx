@@ -43,7 +43,7 @@ export default function BimModel() {
       class: 'modal',
       child: (
         <>
-          <button className="rounded-lg border absolute top-0 right-0 w-7 h-7 flex items-center justify-center w-fit bg-secondary text-white">
+          <button className="rounded-lg border absolute top-0 right-0 w-6 h-6 flex items-center justify-center bg-secondary text-white">
             <PlusIcon className="size-4" />
           </button>
           <div className="flex gap-4 border-t p-2">
@@ -66,7 +66,7 @@ export default function BimModel() {
       tooltip: 'Scene explorer (Shift + e)',
       icon: <ShareIcon className="size-5" />,
       class: 'modal',
-      child: <></>,
+      child: <div className="flex flex-col" id="scene-container"></div>,
     },
     {
       id: 3,
@@ -470,14 +470,12 @@ export default function BimModel() {
   const casters = components.get(OBC.Raycasters)
   const clipper = components.get(OBC.Clipper)
   const measurements = components.get(OBC.MeasurementUtils)
-  const shadows = components.get(OBCF.ShadowDropper)
   const area = components.get(OBCF.AreaMeasurement)
   const edge = components.get(OBCF.EdgeMeasurement)
   const face = components.get(OBCF.FaceMeasurement)
   const angles = components.get(OBCF.AngleMeasurement)
   const grids = components.get(OBC.Grids)
   const highlighter = components.get(OBCF.Highlighter)
-  const indexer = components.get(OBC.IfcRelationsIndexer)
 
   async function loadWorld() {
     if (world.renderer == null) {
@@ -516,23 +514,29 @@ export default function BimModel() {
       }
       fragmentIfcLoader.settings.webIfc.COORDINATE_TO_ORIGIN = true
 
-      const file = await fetch(
-        'https://thatopen.github.io/engine_components/resources/small.ifc'
-      )
-      const data = await file.arrayBuffer()
-      const buffer = new Uint8Array(data)
-      const model = await fragmentIfcLoader.load(buffer)
-      model.name = 'example'
-      model.traverse((obj) => {
-        obj.frustumCulled = false
-      })
-      world.scene.three.add(model)
-      world.meshes.add(model)
-      await indexer.process(model)
-      const allRelationsJSON = indexer.serializeAllRelations()
-      world.camera.controls.dollyTo(25, true)
+      let model = null
+      setTimeout(async () => {
+        const file = await fetch(
+          'https://thatopen.github.io/engine_components/resources/small.ifc'
+        )
+        const data = await file.arrayBuffer()
+        const buffer = new Uint8Array(data)
+        model = await fragmentIfcLoader.load(buffer)
+        model.name = 'example'
+        world.scene.three.add(model)
+        world.meshes.add(model)
+        model.traverse((obj) => {
+          obj.frustumCulled = false
+        })
+        world.camera.controls.dollyTo(25, true)
+      }, 1000)
 
       const classifier = components.get(OBC.Classifier)
+      const indexer = components.get(OBC.IfcRelationsIndexer)
+
+      fragmentsManager.onFragmentsLoaded.add(async (model) => {
+        if (model.hasProperties) await indexer.process(model)
+      })
 
       document.getElementById('btn-2').addEventListener('click', async () => {
         const psets = indexer.getEntityRelations(model, 6518, 'IsDefinedBy')
@@ -540,44 +544,22 @@ export default function BimModel() {
           for (const expressID of psets) {
             // You can get the pset attributes like this
             const pset = await model.getProperties(expressID)
-            // console.log(pset)
+            console.log('pset:' + pset)
             // You can get the pset props like this or iterate over pset.HasProperties yourself
             await OBC.IfcPropertiesUtils.getPsetProps(
               model,
               expressID,
               async (propExpressID) => {
                 const prop = await model.getProperties(propExpressID)
-                // console.log(prop)
+                console.log('prop:' + prop)
               }
             )
           }
         }
-        // console.log(psets)
-        const [classificationsTree, updateClassificationsTree] =
-          CUI.tables.classificationTree({
-            components,
-            classifications: [],
-          })
-        fragmentIfcLoader.onIfcStartedLoading.add(async () => {
-          classifier.byEntity(psets)
-          classifier.byPredefinedType(psets)
-          const classifications = [
-            { system: 'entities', label: 'Entities' },
-            { system: 'predefinedTypes', label: 'Predefined Types' },
-          ]
-          updateClassificationsTree({ classifications })
-        })
-        console.log(classificationsTree)
       })
 
       // raycaster
       // const caster = casters.get(world)
-
-      // apply shadow
-      shadows.shadowExtraScaleFactor = 3
-      shadows.shadowOffset = 0.1
-      const shadowID = world.uuid
-      shadows.create([model], shadowID, world)
 
       // apply postproduction render
       const { postproduction } = world.renderer
@@ -586,9 +568,9 @@ export default function BimModel() {
       const ao = postproduction.n8ao.configuration
 
       // highlight
-      // highlighter.setup({ world })
-      // highlighter.zoomToSelection = true
-      // highlighter.multiple = 'shiftKey'
+      highlighter.setup({ world })
+      highlighter.zoomToSelection = true
+      highlighter.multiple = 'shiftKey'
       // const outliner = components.get(OBCF.Outliner)
       // outliner.world = world
       // outliner.enabled = true
@@ -601,15 +583,6 @@ export default function BimModel() {
       //     opacity: 0.5,
       //   })
       // )
-
-      // highlighter.events.select.onHighlight.add((data) => {
-      //   outliner.clear('example')
-      //   outliner.add('example', data)
-      // })
-
-      // highlighter.events.select.onClear.add(() => {
-      //   outliner.clear('example')
-      // })
 
       // Light control
       postproduction.setPasses({ gamma: false, custom: false, ao: false })
