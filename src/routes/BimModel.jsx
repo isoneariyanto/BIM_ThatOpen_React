@@ -513,6 +513,7 @@ export default function BimModel() {
   const angles = components.get(OBCF.AngleMeasurement)
   const grids = components.get(OBC.Grids)
   const highlighter = components.get(OBCF.Highlighter)
+  const indexer = components.get(OBC.IfcRelationsIndexer)
 
   async function loadWorld() {
     if (world.renderer == null) {
