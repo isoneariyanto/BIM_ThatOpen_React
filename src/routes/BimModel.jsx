@@ -11,6 +11,7 @@ import {
   ScissorsIcon,
   ArrowPathRoundedSquareIcon,
   PlusIcon,
+  BarsArrowDownIcon,
 } from '@heroicons/react/24/outline'
 import ThatOpen from '../components/ThatOpen'
 import Stats from 'three/examples/jsm/libs/stats.module'
@@ -66,7 +67,43 @@ export default function BimModel() {
       tooltip: 'Scene explorer (Shift + e)',
       icon: <ShareIcon className="size-5" />,
       class: 'modal',
-      child: <div className="flex flex-col" id="scene-container"></div>,
+      child: (
+        <div className="flex flex-col gap-4">
+          <div className="flex w-full gap-2">
+            <label className="input input-bordered input-sm flex items-center gap-2 w-full">
+              <input
+                type="text"
+                className="grow"
+                placeholder="Search"
+                id="sceneSearch"
+              />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="h-4 w-4 opacity-70"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </label>
+            <button
+              className="tooltip rounded-lg bg-secondary text-white border flex items-center btn-sm justify-center tooltip-left"
+              data-tip="Expand/Collapse"
+              id="btnSceneEx"
+            >
+              <BarsArrowDownIcon className="size-5" />
+            </button>
+          </div>
+          <div
+            id="scene-content"
+            className="col-span-5 max-h-96 overflow-y-auto"
+          ></div>
+        </div>
+      ),
     },
     {
       id: 3,
@@ -479,7 +516,6 @@ export default function BimModel() {
 
   async function loadWorld() {
     if (world.renderer == null) {
-      // UIManager.init()
       const container = document.getElementById('bim-model-canvas')
       world.scene = new OBC.SimpleScene(components)
 
@@ -500,6 +536,7 @@ export default function BimModel() {
 
       world.camera.controls.maxPolarAngle = 1.55
       const grid = grids.create(world)
+      grid.config.visible = false
 
       await fragmentIfcLoader.setup()
 
@@ -522,67 +559,114 @@ export default function BimModel() {
         const data = await file.arrayBuffer()
         const buffer = new Uint8Array(data)
         model = await fragmentIfcLoader.load(buffer)
-        model.name = 'example'
-        world.scene.three.add(model)
-        world.meshes.add(model)
+        model.name = 'Small Ifc'
         model.traverse((obj) => {
           obj.frustumCulled = false
         })
+        world.scene.three.add(model)
+        world.meshes.add(model)
         world.camera.controls.dollyTo(25, true)
       }, 1000)
 
-      const classifier = components.get(OBC.Classifier)
-      const indexer = components.get(OBC.IfcRelationsIndexer)
+      // highlight
+      highlighter.setup({ world })
+      highlighter.enabled = true
+      highlighter.zoomToSelection = true
+      highlighter.multiple = 'shiftKey'
 
+      const [propertiesTable, updatePropertiesTable] =
+        CUI.tables.elementProperties({
+          components,
+          fragmentIdMap: {},
+        })
+
+      const [relationsTree] = CUI.tables.relationsTree({
+        components,
+        models: [],
+      })
+      relationsTree.preserveStructureOnFilter = true
+      relationsTree.expanded = true
+
+      const info = document.getElementById('info-container')
+      const element = document.getElementById('elementProp')
+      const mainLayout = document.getElementById('scene-content')
+
+      propertiesTable.preserveStructureOnFilter = true
+      propertiesTable.indentationInText = false
+      propertiesTable.expanded = true
       fragmentsManager.onFragmentsLoaded.add(async (model) => {
         if (model.hasProperties) await indexer.process(model)
       })
 
-      document.getElementById('btn-2').addEventListener('click', async () => {
-        const psets = indexer.getEntityRelations(model, 6518, 'IsDefinedBy')
-        if (psets) {
-          for (const expressID of psets) {
-            // You can get the pset attributes like this
-            const pset = await model.getProperties(expressID)
-            console.log('pset:' + pset)
-            // You can get the pset props like this or iterate over pset.HasProperties yourself
-            await OBC.IfcPropertiesUtils.getPsetProps(
-              model,
-              expressID,
-              async (propExpressID) => {
-                const prop = await model.getProperties(propExpressID)
-                console.log('prop:' + prop)
-              }
-            )
-          }
+      BUI.Manager.init()
+
+      const btnExpand = document.getElementById('btnElementEx')
+      btnExpand.addEventListener(
+        'click',
+        (e) => (propertiesTable.expanded = !propertiesTable.expanded)
+      )
+
+      const propertiesPanel = BUI.Component.create(() => {
+        return BUI.html`
+        <bim-panel style="grid-area: viewport; width: 100%; background: transparent">
+            ${propertiesTable}
+        </bim-panel>
+      `
+      })
+      element.appendChild(propertiesPanel)
+
+      // === scene script
+      const onTextInput = (e) => {
+        const input = e.target
+        relationsTree.queryString = input.value !== '' ? input.value : null
+      }
+      const sceneSrc = document.getElementById('sceneSearch')
+      sceneSrc.addEventListener('keypress', onTextInput)
+
+      const sceneEx = document.getElementById('btnSceneEx')
+      sceneEx.addEventListener(
+        'click',
+        (e) => (relationsTree.expanded = !relationsTree.expanded)
+      )
+      document.getElementById('btn-2').addEventListener('click', (e) => {
+        const panel = BUI.Component.create(() => {
+          return BUI.html`
+           <bim-panel style="grid-area: viewport; width: 100%; background: transparent">
+              ${relationsTree}
+           </bim-panel> 
+          `
+        })
+
+        mainLayout.appendChild(panel)
+      })
+
+      highlighter.events.select.onHighlight.add((fragmentIdMap) => {
+        updatePropertiesTable({ fragmentIdMap })
+        if (info.classList.contains('translate-x-[100vw]')) {
+          info.classList.remove('translate-x-[100vw]')
+          info.classList.add('translate-x-0')
         }
       })
 
-      // raycaster
-      // const caster = casters.get(world)
+      highlighter.events.select.onClear.add(() => {
+        updatePropertiesTable({ fragmentIdMap: {} })
+        if (info.classList.contains('translate-x-0')) {
+          info.classList.remove('translate-x-0')
+          info.classList.add('translate-x-[100vw]')
+        }
+      })
+
+      // apply shadow
+      // shadows.shadowExtraScaleFactor = 3
+      // shadows.shadowOffset = 0.1
+      // const shadowID = world.uuid
+      // shadows.create([model], shadowID, world)
 
       // apply postproduction render
       const { postproduction } = world.renderer
       postproduction.enabled = true
       postproduction.customEffects.excludedMeshes.push(grid.three)
       const ao = postproduction.n8ao.configuration
-
-      // highlight
-      highlighter.setup({ world })
-      highlighter.zoomToSelection = true
-      highlighter.multiple = 'shiftKey'
-      // const outliner = components.get(OBCF.Outliner)
-      // outliner.world = world
-      // outliner.enabled = true
-
-      // outliner.create(
-      //   'example',
-      //   new THREE.MeshBasicMaterial({
-      //     color: 0x367bfb,
-      //     transparent: true,
-      //     opacity: 0.5,
-      //   })
-      // )
 
       // Light control
       postproduction.setPasses({ gamma: false, custom: false, ao: false })
@@ -689,29 +773,10 @@ export default function BimModel() {
         edge.enabled = true
         container.ondblclick = () => edge.create()
       })
-      let saved = []
       document.getElementById('face').addEventListener('click', () => {
         face.world = world
         face.enabled = true
         container.ondblclick = () => face.create()
-      })
-      window.addEventListener('keydown', (event) => {
-        if (event.code === 'KeyO') {
-          edge.delete()
-          face.delete()
-        } else if (event.code === 'KeyS') {
-          savedEdge = edge.get()
-          edge.deleteAll()
-          savedFace = face.get()
-          face.deleteAll()
-        } else if (event.code === 'KeyL') {
-          if (savedEdge) {
-            edge.set(savedEdge)
-          }
-          if (savedFace) {
-            face.set(savedFace)
-          }
-        }
       })
 
       function delMeas() {
@@ -741,6 +806,7 @@ export default function BimModel() {
       let SectionBox = document
         .getElementById('btn-8')
         .addEventListener('click', () => {
+          highlighter.enabled = false
           clipper.enabled = true
           container.ondblclick = () => {
             if (clipper.enabled) {
@@ -796,11 +862,6 @@ export default function BimModel() {
           world.camera.controls.maxPolarAngle = Math.PI
         }
       })
-      // world.camera.controls.addEventListener(
-      //   'control',
-      //   (e) => console.log(world.camera.controls.getPosition())
-      // console.log(world.camera.controls.getTarget())
-      // )
     }
   }
 
@@ -919,9 +980,22 @@ export default function BimModel() {
         </div>
       </div>
       <div
-        className="w-full h-[90vh] overflow-hidden"
-        id="bim-model-canvas"
-      ></div>
+        className="w-96 max-h-[32rem] overflow-y-auto absolute top-4 right-4 rounded-lg bg-white p-4 translate-x-[100vw] transition ease-in-out delay-500 text-start shadow"
+        id="info-container"
+      >
+        <h6 className="flex justify-between">
+          Element Properties
+          <button
+            className="tooltip rounded bg-secondary text-white border flex items-center justify-center w-5 h-5 tooltip-left"
+            data-tip="Expand/Collapse"
+            id="btnElementEx"
+          >
+            <BarsArrowDownIcon className="size-3" />
+          </button>
+        </h6>
+        <div id="elementProp"></div>
+      </div>
+      <div className="h-[90vh] overflow-hidden" id="bim-model-canvas"></div>
       <button
         className={`btn btn-primary text-white absolute bottom-10 left-1/2 -translate-x-1/2 py-2 ${
           isClipper ? 'visible' : 'invisible'
